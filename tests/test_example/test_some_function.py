@@ -1,16 +1,12 @@
 # -*- coding: utf-8 -*-
 
-import pytest
-
-from platonic_amazon_sqs.queue import some_function
+from platonic_amazon_sqs.queue import SQSQueue
 
 
-@pytest.mark.parametrize(('first', 'second', 'expected'), [
-    (1, 2, 3),
-    (2, 4, 6),
-    (-2, -3, -5),
-    (-5, 5, 0),
-])
-def test_some_function(first, second, expected):
-    """Example test with parametrization."""
-    assert some_function(first, second) == expected
+class Ages(SQSQueue[int]):
+    url = ''
+
+
+def test_value_type():
+    ages = Ages()
+    assert ages.value_type is int

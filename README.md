@@ -27,10 +27,7 @@ pip install platonic-amazon-sqs
 Showcase how your project can be used:
 
 ```python
-from platonic_amazon_sqs.queue import some_function
-
-print(some_function(3, 4))
-# => 7
+...
 ```
 
 ## License
