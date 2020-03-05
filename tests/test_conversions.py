@@ -1,6 +1,6 @@
 import pytest
-from platonic_amazon_sqs import conversions
 
+from platonic_amazon_sqs import conversions
 
 DATA = [
     (5, conversions.JSONString, '5'),

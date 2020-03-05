@@ -1,53 +1,25 @@
-import json
-from typing import TypeVar, Type, NewType, Union
-import classes
-
+from typing import TypeVar, NewType, Type, Callable, Any, Dict
 
 T = TypeVar('T')
+DestinationType = TypeVar('DestinationType')
 U = TypeVar('U')
+
+Converter = Callable[[Any], DestinationType]
+
+
 JSONString = NewType('JSONString', str)
+CONVERTER_BY_DESTINATION_TYPE: Dict[Type[DestinationType], Converter] = {}
 
 
-CONVERTER_BY_DESTINATION_TYPE = {}
-
-
-def converter(destination_type):
-    def registerer(f):
+def converter(destination_type: Type[DestinationType]):
+    def registerer(f: Converter):
         CONVERTER_BY_DESTINATION_TYPE[destination_type] = f
         return f
 
     return registerer
 
 
-@converter(JSONString)
-@classes.typeclass
-def to_json_string(value: T) -> JSONString:
-    ...
-
-
-@to_json_string.instance(int)
-@to_json_string.instance(float)
-def numbers_to_json_string(value: Union[int, float]) -> JSONString:
-    return JSONString(str(value))
-
-
-@to_json_string.instance(str)
-def str_to_json_string(value: str) -> JSONString:
-    return JSONString(json.dumps(value))
-
-
-@converter(int)
-@classes.typeclass
-def to_int(value: T) -> int:
-    ...
-
-
-@to_int.instance(str)
-def str_to_int(value: str) -> int:
-    return int(value)
-
-
-def convert(value: T, destination_type: Type[U]) -> U:
+def convert(value: Any, destination_type: Type[DestinationType]) -> U:
     """Convert a given value to specified destination type."""
     try:
         converter = CONVERTER_BY_DESTINATION_TYPE[destination_type]

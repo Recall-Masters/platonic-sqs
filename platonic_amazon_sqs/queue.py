@@ -7,6 +7,8 @@ import typing
 from boto3_type_annotations import sqs
 
 import boto3
+
+import platonic_amazon_sqs.conversions.base
 from platonic_amazon_sqs import conversions
 
 from platonic_amazon_sqs.conversions import to_string, from_string
@@ -79,11 +81,12 @@ class SQSQueue(AcknowledgementQueue[T]):
         # FIXME make this a cached property
         return boto3.client('sqs')
 
-    def serialize(self, value: T) -> conversions.JSONString:
-        return conversions.convert(value, conversions.JSONString)
+    def serialize(self, value: T) -> platonic_amazon_sqs.conversions.base.JSONString:
+        return platonic_amazon_sqs.conversions.base.convert(value,
+                                                            platonic_amazon_sqs.conversions.base.JSONString)
 
-    def deserialize(self, raw_value: conversions.JSONString) -> T:
-        return conversions.convert(
+    def deserialize(self, raw_value: platonic_amazon_sqs.conversions.base.JSONString) -> T:
+        return platonic_amazon_sqs.conversions.base.convert(
             value=raw_value,
             destination_type=self.value_type
         )
