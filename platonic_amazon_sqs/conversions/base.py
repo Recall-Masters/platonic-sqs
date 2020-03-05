@@ -1,25 +1,29 @@
 from typing import TypeVar, NewType, Type, Callable, Any, Dict
 
-T = TypeVar('T')
-DestinationType = TypeVar('DestinationType')
-U = TypeVar('U')
-
-Converter = Callable[[Any], DestinationType]
-
-
 JSONString = NewType('JSONString', str)
-CONVERTER_BY_DESTINATION_TYPE: Dict[Type[DestinationType], Converter] = {}
+
+T = TypeVar('T')
+
+DestinationType = TypeVar('DestinationType')
+
+Converter = Callable[[Any], DestinationType]  # type: ignore
 
 
-def converter(destination_type: Type[DestinationType]):
-    def registerer(f: Converter):
+CONVERTER_BY_DESTINATION_TYPE: Dict[Type[T], Converter[T]] = {}  # type: ignore
+
+
+def converter(destination_type: Type[T]):
+    def registerer(f: Converter[T]):
         CONVERTER_BY_DESTINATION_TYPE[destination_type] = f
         return f
 
     return registerer
 
 
-def convert(value: Any, destination_type: Type[DestinationType]) -> U:
+def convert(  # type: ignore
+    value: Any,
+    destination_type: Type[DestinationType]
+) -> DestinationType:
     """Convert a given value to specified destination type."""
     try:
         converter = CONVERTER_BY_DESTINATION_TYPE[destination_type]
@@ -34,7 +38,7 @@ def convert(value: Any, destination_type: Type[DestinationType]) -> U:
 
     except NotImplementedError as err:
         value_type = type(value)
-        converter_name = converter._signature
+        converter_name = converter._signature  # type: ignore
 
         raise NotImplementedError(
             f'{converter_name} cannot convert {value}: {value_type.__name__} ' +

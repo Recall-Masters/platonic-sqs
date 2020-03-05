@@ -1,17 +1,12 @@
 import dataclasses
-import functools
+import typing
 from abc import ABC
 from typing import Generic, TypeVar, Optional, Type
 
-import typing
+import boto3
 from boto3_type_annotations import sqs
 
-import boto3
-
-import platonic_amazon_sqs.conversions.base
 from platonic_amazon_sqs import conversions
-
-from platonic_amazon_sqs.conversions import to_string, from_string
 
 T = TypeVar('T')
 
@@ -81,12 +76,14 @@ class SQSQueue(AcknowledgementQueue[T]):
         # FIXME make this a cached property
         return boto3.client('sqs')
 
-    def serialize(self, value: T) -> platonic_amazon_sqs.conversions.base.JSONString:
-        return platonic_amazon_sqs.conversions.base.convert(value,
-                                                            platonic_amazon_sqs.conversions.base.JSONString)
+    def serialize(self, value: T) -> conversions.JSONString:
+        return conversions.convert(
+            value=value,
+            destination_type=conversions.JSONString
+        )
 
-    def deserialize(self, raw_value: platonic_amazon_sqs.conversions.base.JSONString) -> T:
-        return platonic_amazon_sqs.conversions.base.convert(
+    def deserialize(self, raw_value: conversions.JSONString) -> T:
+        return conversions.convert(
             value=raw_value,
             destination_type=self.value_type
         )
