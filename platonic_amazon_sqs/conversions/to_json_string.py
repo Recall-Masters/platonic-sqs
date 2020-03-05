@@ -1,9 +1,11 @@
 import json
-from typing import Union
+from typing import NewType, Union
 
 import classes
 
-from platonic_amazon_sqs.conversions.base import converter, JSONString
+from platonic_amazon_sqs.conversions.base import converter
+
+JSONString = NewType('JSONString', str)
 
 
 @converter(JSONString)
