@@ -1,43 +1,48 @@
-from typing import TypeVar, NewType, Type, Callable, Any, Dict
+from typing import Any, Callable, Dict, Type, TypeVar
 
-T = TypeVar('T')
+T = TypeVar('T')  # noqa: WPS111
+
 DestinationType = TypeVar('DestinationType')
-U = TypeVar('U')
 
-Converter = Callable[[Any], DestinationType]
-
-
-JSONString = NewType('JSONString', str)
-CONVERTER_BY_DESTINATION_TYPE: Dict[Type[DestinationType], Converter] = {}
+Converter = Callable[[Any], DestinationType]  # type: ignore
 
 
-def converter(destination_type: Type[DestinationType]):
-    def registerer(f: Converter):
-        CONVERTER_BY_DESTINATION_TYPE[destination_type] = f
-        return f
+CONVERTER_BY_DESTINATION_TYPE: Dict[  # type: ignore  # noqa: WPS407
+    Type[T], Converter[T],
+] = {}
+
+
+def converter(destination_type: Type[T]):
+    """Register function as a converter to certain destination type."""
+    def registerer(function: Converter[T]):  # noqa: WPS430
+        CONVERTER_BY_DESTINATION_TYPE[destination_type] = function
+        return function
 
     return registerer
 
 
-def convert(value: Any, destination_type: Type[DestinationType]) -> U:
+def convert(  # type: ignore
+    value: Any,
+    destination_type: Type[DestinationType],
+) -> DestinationType:
     """Convert a given value to specified destination type."""
     try:
-        converter = CONVERTER_BY_DESTINATION_TYPE[destination_type]
+        concrete_converter = CONVERTER_BY_DESTINATION_TYPE[destination_type]
 
-    except KeyError as err:
+    except KeyError as key_error:
         raise TypeError(
-            f'No converter defined for destination type {destination_type}.'
-        ) from err
+            f'No converter defined for destination type {destination_type}.',
+        ) from key_error
 
     try:
-        return converter(value)
+        return concrete_converter(value)
 
-    except NotImplementedError as err:
+    except NotImplementedError as not_implemented_error:
         value_type = type(value)
-        converter_name = converter._signature
+        converter_name = converter._signature  # type: ignore  # noqa: WPS437
 
         raise NotImplementedError(
             f'{converter_name} cannot convert {value}: {value_type.__name__} ' +
             f'to {destination_type} because it does not know what to do with ' +
-            f'its type.'
-        ) from err
+            f'its type.',
+        ) from not_implemented_error
