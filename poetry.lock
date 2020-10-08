@@ -520,6 +520,14 @@ version = "0.4.3"
 
 [[package]]
 category = "dev"
+description = "A timer context manager measuring the clock wall time of the code block it contains."
+name = "contexttimer"
+optional = false
+python-versions = "*"
+version = "0.3.3"
+
+[[package]]
+category = "dev"
 description = "Code coverage measurement for Python"
 name = "coverage"
 optional = false
@@ -2035,7 +2043,7 @@ docs = ["sphinx", "jaraco.packaging (>=3.2)", "rst.linker (>=1.9)"]
 testing = ["pathlib2", "contextlib2", "unittest2"]
 
 [metadata]
-content-hash = "5938fb761b0362938d38176518da3eccef2e52d38fd09d866697b3c9f4eb3f96"
+content-hash = "968bf3ba16b7c4c56a3060833df0c030c5b2991d50123d15209333f77d45bf64"
 python-versions = "^3.6"
 
 [metadata.files]
@@ -2150,6 +2158,9 @@ cognitive-complexity = [
 colorama = [
     {file = "colorama-0.4.3-py2.py3-none-any.whl", hash = "sha256:7d73d2a99753107a36ac6b455ee49046802e59d9d076ef8e47b61499fa29afff"},
     {file = "colorama-0.4.3.tar.gz", hash = "sha256:e96da0d330793e2cb9485e9ddfd918d456036c7149416295932478192f4436a1"},
+]
+contexttimer = [
+    {file = "contexttimer-0.3.3.tar.gz", hash = "sha256:35a1efd389af3f1ca509f33ff23e17d98b66c8fde5ba2a4eb8a8b7fa456598a5"},
 ]
 coverage = [
     {file = "coverage-5.0-cp27-cp27m-macosx_10_12_x86_64.whl", hash = "sha256:9c871b006c878a890c6e44a5b2f3c6291335324b298c904dc0402ee92ee1f0be"},
