@@ -38,28 +38,28 @@ def test_non_existing_queue(mock_sqs_client: SQSClient):
     )
 
     with pytest.raises(QueueDoesNotExist):
-        sender.put(Command.JUMP)
+        sender.send(Command.JUMP)
 
 
 def test_put_and_get(receiver_and_sender: ReceiverAndSender):
     """Whatever we put into sender ends up in receiver."""
     receiver, sender = receiver_and_sender
-    sender.put(Command.RIGHT)
-    assert receiver.get().value == Command.RIGHT
+    sender.send(Command.RIGHT)
+    assert receiver.receive().value == Command.RIGHT
 
 
 def test_put_and_get_twice(receiver_and_sender: ReceiverAndSender):
     """We have not acknowledged the message. Thus we will receive it again."""
     receiver, sender = receiver_and_sender
-    sender.put(Command.RIGHT)
+    sender.send(Command.RIGHT)
 
     # We are receiving the command successfully.
-    assert receiver.get().value == Command.RIGHT
+    assert receiver.receive().value == Command.RIGHT
 
     # This call will return the message again as soon as visibility timeout
     # expires.
     with contexttimer.Timer() as timer:
-        assert receiver.get().value == Command.RIGHT
+        assert receiver.receive().value == Command.RIGHT
 
     # The visibility timeout for the mock SQS queue is 3 seconds.
     assert round(timer.elapsed) >= 3
@@ -68,9 +68,9 @@ def test_put_and_get_twice(receiver_and_sender: ReceiverAndSender):
 def test_put_and_acknowledge(receiver_and_sender: ReceiverAndSender):
     """We receive a command, acknowledge it, and now queue is empty."""
     receiver, sender = receiver_and_sender
-    sender.put(Command.JUMP)
+    sender.send(Command.JUMP)
 
-    jump_message = receiver.get()
+    jump_message = receiver.receive()
     receiver.acknowledge(jump_message)
     # If we run another receiver.get() - it will hang indefinitely.
 
@@ -94,12 +94,12 @@ def test_put_many(receiver_and_sender: ReceiverAndSender):
 
     sent_commands = [Command.RIGHT, Command.FORWARD, Command.LEFT, Command.JUMP]
 
-    sender.put_many(sent_commands)
+    sender.send_many(sent_commands)
 
-    assert receiver.get().value == Command.RIGHT
-    assert receiver.get().value == Command.FORWARD
-    assert receiver.get().value == Command.LEFT
-    assert receiver.get().value == Command.JUMP
+    assert receiver.receive().value == Command.RIGHT
+    assert receiver.receive().value == Command.FORWARD
+    assert receiver.receive().value == Command.LEFT
+    assert receiver.receive().value == Command.JUMP
 
 
 def test_iterate_imperative(receiver_and_sender: ReceiverAndSender):
@@ -108,7 +108,7 @@ def test_iterate_imperative(receiver_and_sender: ReceiverAndSender):
 
     sent_commands = [Command.RIGHT, Command.FORWARD, Command.LEFT, Command.JUMP]
 
-    sender.put_many(sent_commands)
+    sender.send_many(sent_commands)
 
     received_commands = []
     for message in receiver:
@@ -128,7 +128,7 @@ def test_iterate_functional(receiver_and_sender: ReceiverAndSender):
 
     sent_commands = [Command.RIGHT, Command.FORWARD, Command.LEFT, Command.JUMP]
 
-    sender.put_many(sent_commands)
+    sender.send_many(sent_commands)
 
     # We have to limit the number of messages we are interested in, or .get()
     # will hang forever.
@@ -151,7 +151,7 @@ def test_acknowledgement(receiver_and_sender: ReceiverAndSender):
 
     sent_commands = [Command.RIGHT, Command.FORWARD, Command.LEFT, Command.JUMP]
 
-    sender.put_many(sent_commands)
+    sender.send_many(sent_commands)
 
     received_commands = []
     for message in receiver:

@@ -108,6 +108,14 @@ six = ">=1.10.0"
 stevedore = ">=1.20.0"
 
 [[package]]
+category = "main"
+description = "When they're not builtins, they're boltons."
+name = "boltons"
+optional = false
+python-versions = "*"
+version = "20.2.1"
+
+[[package]]
 category = "dev"
 description = "Amazon Web Services Library"
 name = "boto"
@@ -2043,7 +2051,7 @@ docs = ["sphinx", "jaraco.packaging (>=3.2)", "rst.linker (>=1.9)"]
 testing = ["pathlib2", "contextlib2", "unittest2"]
 
 [metadata]
-content-hash = "968bf3ba16b7c4c56a3060833df0c030c5b2991d50123d15209333f77d45bf64"
+content-hash = "82d6621e23ec7e5100b90e393b7df03d2e14517a3840ec4ae8d490d69b77be81"
 python-versions = "^3.6"
 
 [metadata.files]
@@ -2081,6 +2089,10 @@ babel = [
 bandit = [
     {file = "bandit-1.6.2-py2.py3-none-any.whl", hash = "sha256:336620e220cf2d3115877685e264477ff9d9abaeb0afe3dc7264f55fa17a3952"},
     {file = "bandit-1.6.2.tar.gz", hash = "sha256:41e75315853507aa145d62a78a2a6c5e3240fe14ee7c601459d0df9418196065"},
+]
+boltons = [
+    {file = "boltons-20.2.1-py2.py3-none-any.whl", hash = "sha256:3dd8a8e3c1886e7f7ba3422b50f55a66e1700161bf01b919d098e7d96dd2d9b6"},
+    {file = "boltons-20.2.1.tar.gz", hash = "sha256:dd362291a460cc1e0c2e91cc6a60da3036ced77099b623112e8f833e6734bdc5"},
 ]
 boto = [
     {file = "boto-2.49.0-py2.py3-none-any.whl", hash = "sha256:147758d41ae7240dc989f0039f27da8ca0d53734be0eb869ef16e3adcfa462e8"},

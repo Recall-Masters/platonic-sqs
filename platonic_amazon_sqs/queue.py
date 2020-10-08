@@ -1,11 +1,16 @@
 import dataclasses
+import uuid
 from contextlib import contextmanager
 from functools import partial
-from typing import TypeVar, NewType
+from typing import TypeVar, NewType, Iterable, Iterator
+from boltons.iterutils import chunked_iter
 
 import boto3
 from mypy_boto3_sqs import Client as SQSClient
-from mypy_boto3_sqs.type_defs import ReceiveMessageResultTypeDef, MessageTypeDef
+from mypy_boto3_sqs.type_defs import (
+    ReceiveMessageResultTypeDef,
+    MessageTypeDef, SendMessageBatchRequestEntryTypeDef,
+)
 from typecasts import Typecasts, casts
 
 from platonic import (
@@ -69,7 +74,7 @@ class SQSInputQueue(SQSMixin, InputQueue[ValueType]):
             id=raw_message['ReceiptHandle'],
         )
 
-    def get(self) -> SQSMessage[ValueType]:
+    def receive(self) -> SQSMessage[ValueType]:
         """
         Fetch one message from the queue.
 
@@ -92,7 +97,7 @@ class SQSInputQueue(SQSMixin, InputQueue[ValueType]):
             except KeyError:
                 continue
 
-    def __iter__(self):
+    def __iter__(self) -> Iterator[SQSMessage[ValueType]]:
         while True:
             try:
                 raw_messages = self._receive_messages(
@@ -154,7 +159,7 @@ class SQSMessageDoesNotExist(MessageDoesNotExist):
 class SQSOutputQueue(SQSMixin, OutputQueue[ValueType]):
     """Queue to write stuff into."""
 
-    def put(self, instance: ValueType) -> SQSMessage[ValueType]:
+    def send(self, instance: ValueType) -> SQSMessage[ValueType]:
         """Put a message into the queue."""
         try:
             sqs_response = self.client.send_message(
@@ -171,3 +176,28 @@ class SQSOutputQueue(SQSMixin, OutputQueue[ValueType]):
             #   one cases and ResponseHandle in others. Inconsistent.
             id=sqs_response['MessageId'],
         )
+
+    def _generate_send_batch_entry(
+        self,
+        instance: ValueType,
+    ) -> SendMessageBatchRequestEntryTypeDef:
+        """Compose the entry for send_message_batch() operation."""
+        return SendMessageBatchRequestEntryTypeDef(
+            Id=uuid.uuid4().hex,
+            MessageBody=self.serialize_value(instance),
+        )
+
+    def send_many(self, iterable: Iterable[ValueType]) -> None:
+        """Send multiple messages."""
+        # Per one API call, we can send no more than MAX_NUMBER_OF_MESSAGES
+        # individual messages.
+        batches = chunked_iter(iterable, MAX_NUMBER_OF_MESSAGES)
+
+        for batch in batches:
+            self.client.send_message_batch(
+                QueueUrl=self.url,
+                Entries=list(map(
+                    self._generate_send_batch_entry,
+                    batch,
+                ))
+            )
