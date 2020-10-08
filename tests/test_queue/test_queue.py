@@ -1,9 +1,8 @@
-import itertools
-from typing import Tuple
+import operator
+from itertools import islice
 
 import contexttimer
 import pytest
-from moto.sqs import mock_sqs
 from mypy_boto3_sqs import Client as SQSClient
 
 from platonic import QueueDoesNotExist, MessageDoesNotExist
@@ -87,3 +86,79 @@ def test_acknowledge_fake_message(receiver_and_sender: ReceiverAndSender):
 
     with pytest.raises(MessageDoesNotExist):
         receiver.acknowledge(message)
+
+
+def test_put_many(receiver_and_sender: ReceiverAndSender):
+    """The messages put into queue keep their order."""
+    receiver, sender = receiver_and_sender
+
+    sent_commands = [Command.RIGHT, Command.FORWARD, Command.LEFT, Command.JUMP]
+
+    sender.put_many(sent_commands)
+
+    assert receiver.get().value == Command.RIGHT
+    assert receiver.get().value == Command.FORWARD
+    assert receiver.get().value == Command.LEFT
+    assert receiver.get().value == Command.JUMP
+
+
+def test_iterate_imperative(receiver_and_sender: ReceiverAndSender):
+    """The `for` loop construct can iterate by messages in queue."""
+    receiver, sender = receiver_and_sender
+
+    sent_commands = [Command.RIGHT, Command.FORWARD, Command.LEFT, Command.JUMP]
+
+    sender.put_many(sent_commands)
+
+    received_commands = []
+    for message in receiver:
+        received_commands.append(message.value)
+
+        receiver.acknowledge(message)
+
+        if message.value == Command.JUMP:
+            break
+
+    assert received_commands == sent_commands
+
+
+def test_iterate_functional(receiver_and_sender: ReceiverAndSender):
+    """The `for` loop construct can iterate by messages in queue."""
+    receiver, sender = receiver_and_sender
+
+    sent_commands = [Command.RIGHT, Command.FORWARD, Command.LEFT, Command.JUMP]
+
+    sender.put_many(sent_commands)
+
+    # We have to limit the number of messages we are interested in, or .get()
+    # will hang forever.
+    messages = islice(receiver, len(sent_commands))
+
+    # Now let's acknowledge those messages.
+    messages = map(receiver.acknowledge, messages)
+
+    # And let's see what they are.
+    received_commands = list(map(operator.attrgetter('value'), messages))
+
+    assert received_commands == sent_commands
+
+
+def test_acknowledgement(receiver_and_sender: ReceiverAndSender):
+    """
+    The acknowledgement() context manager automatically acknowledges messages.
+    """
+    receiver, sender = receiver_and_sender
+
+    sent_commands = [Command.RIGHT, Command.FORWARD, Command.LEFT, Command.JUMP]
+
+    sender.put_many(sent_commands)
+
+    received_commands = []
+    for message in receiver:
+        with receiver.acknowledgement(message):
+            received_commands.append(message.value)
+
+        if message.value == Command.JUMP:
+            break
+
+    assert received_commands == sent_commands

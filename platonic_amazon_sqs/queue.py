@@ -1,9 +1,11 @@
 import dataclasses
+from contextlib import contextmanager
 from functools import partial
 from typing import TypeVar, NewType
 
 import boto3
 from mypy_boto3_sqs import Client as SQSClient
+from mypy_boto3_sqs.type_defs import ReceiveMessageResultTypeDef, MessageTypeDef
 from typecasts import Typecasts, casts
 
 from platonic import (
@@ -13,6 +15,10 @@ from platonic import (
 
 ValueType = TypeVar('ValueType')
 InternalType = NewType('InternalType', str)
+
+
+MAX_NUMBER_OF_MESSAGES = 10
+"""Max number of SQS messages receivable by single API call."""
 
 
 @dataclasses.dataclass
@@ -38,6 +44,31 @@ class SQSMixin:
 class SQSInputQueue(SQSMixin, InputQueue[ValueType]):
     """Queue to read stuff from."""
 
+    def _receive_messages(
+        self,
+        message_count: int = 1,
+    ) -> ReceiveMessageResultTypeDef:
+        """
+        Calls SQSClient.receive_message.
+
+        Do not override.
+        """
+        return self.client.receive_message(
+            QueueUrl=self.url,
+            MaxNumberOfMessages=message_count,
+        )
+
+    def _raw_message_to_sqs_message(
+        self, raw_message: MessageTypeDef,
+    ) -> SQSMessage[ValueType]:
+        """Convert a raw SQS message to the proper SQSMessage instance."""
+        return SQSMessage(
+            value=self.deserialize_value(InternalType(
+                raw_message['Body'],
+            )),
+            id=raw_message['ReceiptHandle'],
+        )
+
     def get(self) -> SQSMessage[ValueType]:
         """
         Fetch one message from the queue.
@@ -52,22 +83,35 @@ class SQSInputQueue(SQSMixin, InputQueue[ValueType]):
         """
         while True:
             try:
-                raw_message, = self.client.receive_message(
-                    QueueUrl=self.url,
-                    MaxNumberOfMessages=1,
+                raw_message, = self._receive_messages(
+                    message_count=1,
                 )['Messages']
 
-                return SQSMessage(
-                    value=self.deserialize_value(InternalType(
-                        raw_message['Body'],
-                    )),
-                    id=raw_message['ReceiptHandle'],
-                )
+                return self._raw_message_to_sqs_message(raw_message)
 
             except KeyError:
                 continue
 
-    def acknowledge(self, message: SQSMessage[ValueType]) -> None:
+    def __iter__(self):
+        while True:
+            try:
+                raw_messages = self._receive_messages(
+                    message_count=MAX_NUMBER_OF_MESSAGES,
+                )['Messages']
+
+            except KeyError:
+                continue
+
+            else:
+                yield from map(
+                    self._raw_message_to_sqs_message,
+                    raw_messages,
+                )
+
+    def acknowledge(
+        self,
+        message: SQSMessage[ValueType],
+    ) -> SQSMessage[ValueType]:
         """
         Acknowledge that the given message was successfully processed.
 
@@ -79,8 +123,18 @@ class SQSInputQueue(SQSMixin, InputQueue[ValueType]):
                 ReceiptHandle=message.id,
             )
 
+            return message
+
         except self.client.exceptions.ReceiptHandleIsInvalid as err:
             raise SQSMessageDoesNotExist(message=message, queue=self) from err
+
+    @contextmanager
+    def acknowledgement(self, message: SQSMessage[ValueType]):
+        try:
+            yield message
+
+        finally:
+            self.acknowledge(message)
 
 
 class SQSQueueDoesNotExist(QueueDoesNotExist):
@@ -113,5 +167,7 @@ class SQSOutputQueue(SQSMixin, OutputQueue[ValueType]):
 
         return SQSMessage(
             value=instance,
+            # FIXME this probably is not correct. `id` contains MessageId in
+            #   one cases and ResponseHandle in others. Inconsistent.
             id=sqs_response['MessageId'],
         )
