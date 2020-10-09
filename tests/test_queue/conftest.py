@@ -7,7 +7,7 @@ import pytest
 
 
 @pytest.fixture(scope='function')
-def mock_sqs_client() -> SQSClient:
+def mock_sqs_client():
     """Mocked AWS Credentials for moto."""
     os.environ['AWS_ACCESS_KEY_ID'] = 'testing'
     os.environ['AWS_SECRET_ACCESS_KEY'] = 'testing'
