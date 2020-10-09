@@ -74,7 +74,7 @@ class SQSInputQueue(SQSMixin, InputQueue[ValueType]):
     ) -> SQSMessage[ValueType]:
         """Convert a raw SQS message to the proper SQSMessage instance."""
         return SQSMessage(
-            value=self.deserialize_value(InternalType(
+            value=self.deserialize_value(InternalType(  # type: ignore
                 raw_message['Body'],
             )),
             id=raw_message['ReceiptHandle'],
@@ -119,8 +119,9 @@ class SQSInputQueue(SQSMixin, InputQueue[ValueType]):
                     raw_messages,
                 )
 
-    def acknowledge(
+    def acknowledge(  # type: ignore
         self,
+        # Liskov Substitution Principle
         message: SQSMessage[ValueType],
     ) -> SQSMessage[ValueType]:
         """
@@ -140,7 +141,11 @@ class SQSInputQueue(SQSMixin, InputQueue[ValueType]):
             raise SQSMessageDoesNotExist(message=message, queue=self) from err
 
     @contextmanager
-    def acknowledgement(self, message: SQSMessage[ValueType]):
+    def acknowledgement(  # type: ignore
+        self,
+        # Liskov substitution principle
+        message: SQSMessage[ValueType],
+    ):
         try:
             yield message
 
@@ -148,11 +153,11 @@ class SQSInputQueue(SQSMixin, InputQueue[ValueType]):
             self.acknowledge(message)
 
 
-class SQSQueueDoesNotExist(QueueDoesNotExist):
+class SQSQueueDoesNotExist(QueueDoesNotExist[ValueType]):
     """SQS Queue at {self.queue.url} does not exist."""
 
 
-class SQSMessageDoesNotExist(MessageDoesNotExist):
+class SQSMessageDoesNotExist(MessageDoesNotExist[ValueType]):
     """
     There is no such message in this SQS queue.
 
