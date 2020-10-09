@@ -1,4 +1,5 @@
 import dataclasses
+import json
 import uuid
 from contextlib import contextmanager
 from functools import partial
@@ -6,6 +7,7 @@ from typing import TypeVar, NewType, Iterable, Iterator
 from boltons.iterutils import chunked_iter
 
 import boto3
+from botocore.exceptions import ClientError
 from mypy_boto3_sqs import Client as SQSClient
 from mypy_boto3_sqs.type_defs import (
     ReceiveMessageResultTypeDef,
@@ -15,7 +17,7 @@ from typecasts import Typecasts, casts
 
 from platonic import (
     InputQueue, Message, const, OutputQueue, QueueDoesNotExist,
-    MessageDoesNotExist,
+    MessageDoesNotExist, MessageTooLarge,
 )
 
 ValueType = TypeVar('ValueType')
@@ -24,6 +26,10 @@ InternalType = NewType('InternalType', str)
 
 MAX_NUMBER_OF_MESSAGES = 10
 """Max number of SQS messages receivable by single API call."""
+
+
+MAX_MESSAGE_SIZE = 262144
+"""Message must be shorter than 262144 bytes."""
 
 
 @dataclasses.dataclass
@@ -161,14 +167,26 @@ class SQSOutputQueue(SQSMixin, OutputQueue[ValueType]):
 
     def send(self, instance: ValueType) -> SQSMessage[ValueType]:
         """Put a message into the queue."""
+        message_body = self.serialize_value(instance)
+
         try:
             sqs_response = self.client.send_message(
                 QueueUrl=self.url,
-                MessageBody=self.serialize_value(instance),
+                MessageBody=message_body,
             )
 
         except self.client.exceptions.QueueDoesNotExist as err:
             raise SQSQueueDoesNotExist(queue=self) from err
+
+        except self.client.exceptions.ClientError as err:
+            if self._error_code_is(err, 'InvalidParameterValue'):
+                raise MessageTooLarge(
+                    max_supported_size=MAX_MESSAGE_SIZE,
+                    message_body=message_body,
+                )
+
+            else:
+                raise
 
         return SQSMessage(
             value=instance,
@@ -187,6 +205,10 @@ class SQSOutputQueue(SQSMixin, OutputQueue[ValueType]):
             MessageBody=self.serialize_value(instance),
         )
 
+    def _error_code_is(self, error: ClientError, error_code: str) -> bool:
+        """Check error code of a boto3 ClientError."""
+        return error.response['Error']['Code'] == error_code
+
     def send_many(self, iterable: Iterable[ValueType]) -> None:
         """Send multiple messages."""
         # Per one API call, we can send no more than MAX_NUMBER_OF_MESSAGES
@@ -194,10 +216,23 @@ class SQSOutputQueue(SQSMixin, OutputQueue[ValueType]):
         batches = chunked_iter(iterable, MAX_NUMBER_OF_MESSAGES)
 
         for batch in batches:
-            self.client.send_message_batch(
-                QueueUrl=self.url,
-                Entries=list(map(
-                    self._generate_send_batch_entry,
-                    batch,
-                ))
-            )
+            entries = list(map(
+                self._generate_send_batch_entry,
+                batch,
+            ))
+
+            try:
+                self.client.send_message_batch(
+                    QueueUrl=self.url,
+                    Entries=entries,
+                )
+
+            except self.client.exceptions.ClientError as err:
+                if self._error_code_is(err, 'BatchRequestTooLong'):
+                    raise MessageTooLarge(
+                        max_supported_size=MAX_MESSAGE_SIZE,
+                        message_body=json.dumps(entries),
+                    )
+
+                else:
+                    raise
