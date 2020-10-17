@@ -5,8 +5,12 @@ import contexttimer
 import pytest
 from mypy_boto3_sqs import Client as SQSClient
 
-from platonic import QueueDoesNotExist, MessageDoesNotExist
-from platonic_amazon_sqs import SQSMessage
+from platonic.queue import (
+    QueueDoesNotExist,
+    MessageDoesNotExist,
+    MessageReceiveTimeout,
+)
+from platonic_amazon_sqs.queue import SQSMessage
 from tests.test_queue.robot import (
     Command, CommandSender, CommandReceiver,
     ReceiverAndSender,
@@ -41,14 +45,14 @@ def test_non_existing_queue(mock_sqs_client: SQSClient):
         sender.send(Command.JUMP)
 
 
-def test_put_and_get(receiver_and_sender: ReceiverAndSender):
+def test_send_and_receive(receiver_and_sender: ReceiverAndSender):
     """Whatever we put into sender ends up in receiver."""
     receiver, sender = receiver_and_sender
     sender.send(Command.RIGHT)
     assert receiver.receive().value == Command.RIGHT
 
 
-def test_put_and_get_twice(receiver_and_sender: ReceiverAndSender):
+def test_send_once_and_receive_twice(receiver_and_sender: ReceiverAndSender):
     """We have not acknowledged the message. Thus we will receive it again."""
     receiver, sender = receiver_and_sender
     sender.send(Command.RIGHT)
@@ -65,21 +69,25 @@ def test_put_and_get_twice(receiver_and_sender: ReceiverAndSender):
     assert round(timer.elapsed) >= 3
 
 
-def test_put_and_acknowledge(receiver_and_sender: ReceiverAndSender):
+def test_send_and_acknowledge(receiver_and_sender: ReceiverAndSender):
     """We receive a command, acknowledge it, and now queue is empty."""
     receiver, sender = receiver_and_sender
     sender.send(Command.JUMP)
 
     jump_message = receiver.receive()
     receiver.acknowledge(jump_message)
-    # If we run another receiver.get() - it will hang indefinitely.
+
+    # Now the queue is empty. We will not be able to receive this message
+    # once again.
+    with pytest.raises(MessageReceiveTimeout):
+        receiver.receive_with_timeout(timeout=2)
 
 
 def test_acknowledge_fake_message(receiver_and_sender: ReceiverAndSender):
     """Acknowledging a message that does not exist causes an exception."""
     receiver, sender = receiver_and_sender
 
-    message = SQSMessage(
+    message = SQSMessage[Command](
         value=Command.JUMP,
         id='abc',
     )
@@ -100,6 +108,10 @@ def test_put_many(receiver_and_sender: ReceiverAndSender):
     assert receiver.receive().value == Command.FORWARD
     assert receiver.receive().value == Command.LEFT
     assert receiver.receive().value == Command.JUMP
+
+    # No more messages available.
+    with pytest.raises(MessageReceiveTimeout):
+        receiver.receive_with_timeout(timeout=1)
 
 
 def test_iterate_imperative(receiver_and_sender: ReceiverAndSender):
@@ -130,8 +142,8 @@ def test_iterate_functional(receiver_and_sender: ReceiverAndSender):
 
     sender.send_many(sent_commands)
 
-    # We have to limit the number of messages we are interested in, or .get()
-    # will hang forever.
+    # We have to limit the number of messages we are interested in,
+    # or .receive() will hang forever.
     messages = islice(receiver, len(sent_commands))
 
     # Now let's acknowledge those messages.
@@ -162,3 +174,16 @@ def test_acknowledgement(receiver_and_sender: ReceiverAndSender):
             break
 
     assert received_commands == sent_commands
+
+
+def test_receive_with_timeout_on_empty_queue(
+    receiver_and_sender: ReceiverAndSender,
+):
+    """Empty queue leads to waiting for a while and empty response."""
+    receiver, _sender = receiver_and_sender
+
+    with contexttimer.Timer() as timer:
+        with pytest.raises(MessageReceiveTimeout):
+            receiver.receive_with_timeout(timeout=1)
+
+    assert round(timer.elapsed) >= 1, 'We have waited for 1 second at least.'

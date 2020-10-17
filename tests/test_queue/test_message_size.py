@@ -1,8 +1,8 @@
 """Children are sending letters to Santa Claus. Sometimes those are too long."""
 import pytest
 
-from platonic import MessageTooLarge
-from platonic_amazon_sqs import SQSOutputQueue, SQSInputQueue
+from platonic.queue import MessageTooLarge
+from platonic_amazon_sqs.queue import SQSOutputQueue, SQSInputQueue
 from mypy_boto3_sqs import Client as SQSClient
 
 
