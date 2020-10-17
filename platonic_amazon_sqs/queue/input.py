@@ -4,9 +4,8 @@ from typing import Iterator
 
 from mypy_boto3_sqs.type_defs import ReceiveMessageResultTypeDef, MessageTypeDef
 
-from platonic import InputQueue, Message
-from platonic.queue.errors import MessageReceiveTimeout
-from platonic_amazon_sqs import SQSMessage
+from platonic.queue import InputQueue, Message, MessageReceiveTimeout
+from platonic_amazon_sqs.queue.message import SQSMessage
 from platonic_amazon_sqs.queue.types import ValueType, InternalType
 from platonic_amazon_sqs.queue.sqs import MAX_NUMBER_OF_MESSAGES, SQSMixin
 from platonic_amazon_sqs.queue.errors import SQSMessageDoesNotExist

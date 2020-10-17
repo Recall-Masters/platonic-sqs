@@ -5,7 +5,7 @@ import boto3
 from mypy_boto3_sqs import Client as SQSClient
 from typecasts import Typecasts, casts
 
-from platonic import const
+from platonic.const import const
 
 MAX_NUMBER_OF_MESSAGES = 10
 """Max number of SQS messages receivable by single API call."""
