@@ -6,6 +6,7 @@ import pytest
 from mypy_boto3_sqs import Client as SQSClient
 
 from platonic import QueueDoesNotExist, MessageDoesNotExist
+from platonic.queue.errors import MessageReceiveTimeout
 from platonic_amazon_sqs import SQSMessage
 from tests.test_queue.robot import (
     Command, CommandSender, CommandReceiver,
@@ -162,3 +163,16 @@ def test_acknowledgement(receiver_and_sender: ReceiverAndSender):
             break
 
     assert received_commands == sent_commands
+
+
+def test_receive_with_timeout_on_empty_queue(
+    receiver_and_sender: ReceiverAndSender,
+):
+    """Empty queue leads to waiting for a while and empty response."""
+    receiver, _sender = receiver_and_sender
+
+    with contexttimer.Timer() as timer:
+        with pytest.raises(MessageReceiveTimeout):
+            receiver.receive_with_timeout(timeout=1)
+
+    assert round(timer.elapsed) >= 1, 'We have waited for 1 second at least.'

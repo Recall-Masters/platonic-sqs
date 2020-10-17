@@ -19,6 +19,7 @@ from platonic import (
     InputQueue, Message, const, OutputQueue, QueueDoesNotExist,
     MessageDoesNotExist, MessageTooLarge,
 )
+from platonic.queue.errors import MessageReceiveTimeout
 
 ValueType = TypeVar('ValueType')
 InternalType = NewType('InternalType', str)
@@ -58,6 +59,7 @@ class SQSInputQueue(SQSMixin, InputQueue[ValueType]):
     def _receive_messages(
         self,
         message_count: int = 1,
+        **kwargs,
     ) -> ReceiveMessageResultTypeDef:
         """
         Calls SQSClient.receive_message.
@@ -67,6 +69,7 @@ class SQSInputQueue(SQSMixin, InputQueue[ValueType]):
         return self.client.receive_message(
             QueueUrl=self.url,
             MaxNumberOfMessages=message_count,
+            **kwargs,
         )
 
     def _raw_message_to_sqs_message(
@@ -102,6 +105,23 @@ class SQSInputQueue(SQSMixin, InputQueue[ValueType]):
 
             except KeyError:
                 continue
+
+    def receive_with_timeout(self, timeout: int) -> Message[ValueType]:
+        """Receive with timeout."""
+        response = self._receive_messages(
+            message_count=1,
+            WaitTimeSeconds=timeout,
+        )
+
+        raw_message, = response.get('Messages')
+        if raw_message:
+            return self._raw_message_to_sqs_message(raw_message)
+
+        else:
+            raise MessageReceiveTimeout(
+                queue=self,
+                timeout=timeout,
+            )
 
     def __iter__(self) -> Iterator[SQSMessage[ValueType]]:
         while True:
