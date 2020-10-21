@@ -2,7 +2,7 @@ SHELL:=/usr/bin/env bash
 
 .PHONY: lint
 lint:
-	mypy platonic_amazon_sqs tests/**/*.py
+	mypy platonic/sqs tests/**/*.py
 	flake8 .
 	doc8 -q docs
 

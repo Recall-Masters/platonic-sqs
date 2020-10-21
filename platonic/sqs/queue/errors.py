@@ -1,5 +1,5 @@
 from platonic.queue import QueueDoesNotExist, MessageDoesNotExist
-from platonic_amazon_sqs.queue.types import ValueType
+from platonic.sqs.queue.types import ValueType
 
 
 class SQSQueueDoesNotExist(QueueDoesNotExist[ValueType]):

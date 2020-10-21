@@ -213,5 +213,3 @@ crashlytics.properties
 crashlytics-build.properties
 fabric.properties
 
-# For the ease of development
-platonic
