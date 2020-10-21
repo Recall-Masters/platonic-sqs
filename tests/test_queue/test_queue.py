@@ -10,7 +10,7 @@ from platonic.queue import (
     MessageDoesNotExist,
     MessageReceiveTimeout,
 )
-from platonic_amazon_sqs.queue import SQSMessage
+from platonic.sqs.queue import SQSMessage
 from tests.test_queue.robot import (
     Command, CommandSender, CommandReceiver,
     ReceiverAndSender,

@@ -2,7 +2,7 @@
 import pytest
 
 from platonic.queue import MessageTooLarge
-from platonic_amazon_sqs.queue import SQSOutputQueue, SQSInputQueue
+from platonic.sqs.queue import SQSOutputQueue, SQSInputQueue
 from mypy_boto3_sqs import Client as SQSClient
 
 

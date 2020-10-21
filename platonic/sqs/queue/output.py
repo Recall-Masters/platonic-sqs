@@ -8,13 +8,13 @@ from botocore.exceptions import ClientError
 from mypy_boto3_sqs.type_defs import SendMessageBatchRequestEntryTypeDef
 
 from platonic.queue import OutputQueue, MessageTooLarge
-from platonic_amazon_sqs.queue.message import SQSMessage
-from platonic_amazon_sqs.queue.types import ValueType
-from platonic_amazon_sqs.queue.sqs import (
+from platonic.sqs.queue.message import SQSMessage
+from platonic.sqs.queue.types import ValueType
+from platonic.sqs.queue.sqs import (
     MAX_NUMBER_OF_MESSAGES,
     MAX_MESSAGE_SIZE, SQSMixin,
 )
-from platonic_amazon_sqs.queue.errors import SQSQueueDoesNotExist
+from platonic.sqs.queue.errors import SQSQueueDoesNotExist
 
 
 @dataclasses.dataclass

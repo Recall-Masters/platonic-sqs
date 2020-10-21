@@ -6,7 +6,7 @@ from typing import Tuple
 
 import typecasts
 
-from platonic_amazon_sqs.queue import SQSOutputQueue, SQSInputQueue
+from platonic.sqs.queue import SQSOutputQueue, SQSInputQueue
 
 
 class Command(str, Enum):
