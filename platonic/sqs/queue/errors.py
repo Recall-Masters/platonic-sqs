@@ -1,4 +1,4 @@
-from platonic.queue import QueueDoesNotExist, MessageDoesNotExist
+from platonic.queue import MessageDoesNotExist, QueueDoesNotExist
 from platonic.sqs.queue.types import ValueType
 
 

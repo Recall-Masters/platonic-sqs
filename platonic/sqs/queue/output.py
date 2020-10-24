@@ -7,14 +7,15 @@ from boltons.iterutils import chunked_iter
 from botocore.exceptions import ClientError
 from mypy_boto3_sqs.type_defs import SendMessageBatchRequestEntryTypeDef
 
-from platonic.queue import OutputQueue, MessageTooLarge
-from platonic.sqs.queue.message import SQSMessage
-from platonic.sqs.queue.types import ValueType
-from platonic.sqs.queue.sqs import (
-    MAX_NUMBER_OF_MESSAGES,
-    MAX_MESSAGE_SIZE, SQSMixin,
-)
+from platonic.queue import MessageTooLarge, OutputQueue
 from platonic.sqs.queue.errors import SQSQueueDoesNotExist
+from platonic.sqs.queue.message import SQSMessage
+from platonic.sqs.queue.sqs import (
+    MAX_MESSAGE_SIZE,
+    MAX_NUMBER_OF_MESSAGES,
+    SQSMixin,
+)
+from platonic.sqs.queue.types import ValueType
 
 
 @dataclasses.dataclass
@@ -31,8 +32,8 @@ class SQSOutputQueue(SQSMixin, OutputQueue[ValueType]):
                 MessageBody=message_body,
             )
 
-        except self.client.exceptions.QueueDoesNotExist as err:
-            raise SQSQueueDoesNotExist(queue=self) from err
+        except self.client.exceptions.QueueDoesNotExist as queue_does_not_exist:
+            raise SQSQueueDoesNotExist(queue=self) from queue_does_not_exist
 
         except self.client.exceptions.ClientError as err:
             if self._error_code_is(err, 'InvalidParameterValue'):
@@ -41,8 +42,7 @@ class SQSOutputQueue(SQSMixin, OutputQueue[ValueType]):
                     message_body=message_body,
                 )
 
-            else:
-                raise
+            raise
 
         return SQSMessage(
             value=instance,
@@ -50,20 +50,6 @@ class SQSOutputQueue(SQSMixin, OutputQueue[ValueType]):
             #   one cases and ResponseHandle in others. Inconsistent.
             id=sqs_response['MessageId'],
         )
-
-    def _generate_send_batch_entry(
-        self,
-        instance: ValueType,
-    ) -> SendMessageBatchRequestEntryTypeDef:
-        """Compose the entry for send_message_batch() operation."""
-        return SendMessageBatchRequestEntryTypeDef(
-            Id=uuid.uuid4().hex,
-            MessageBody=self.serialize_value(instance),
-        )
-
-    def _error_code_is(self, error: ClientError, error_code: str) -> bool:
-        """Check error code of a boto3 ClientError."""
-        return error.response['Error']['Code'] == error_code
 
     def send_many(self, iterable: Iterable[ValueType]) -> None:
         """Send multiple messages."""
@@ -90,5 +76,18 @@ class SQSOutputQueue(SQSMixin, OutputQueue[ValueType]):
                         message_body=json.dumps(entries),
                     )
 
-                else:
-                    raise
+                raise
+
+    def _generate_send_batch_entry(
+        self,
+        instance: ValueType,
+    ) -> SendMessageBatchRequestEntryTypeDef:
+        """Compose the entry for send_message_batch() operation."""
+        return SendMessageBatchRequestEntryTypeDef(
+            Id=uuid.uuid4().hex,
+            MessageBody=self.serialize_value(instance),
+        )
+
+    def _error_code_is(self, error: ClientError, error_code: str) -> bool:
+        """Check error code of a boto3 ClientError."""
+        return error.response['Error']['Code'] == error_code

@@ -8,4 +8,4 @@ from platonic.sqs.queue import ValueType
 class SQSMessage(Message[ValueType]):
     """SQS message houses unique message ID."""
 
-    id: str
+    receipt_handle: str
