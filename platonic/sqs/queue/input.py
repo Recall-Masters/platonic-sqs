@@ -140,5 +140,5 @@ class SQSInputQueue(SQSMixin, InputQueue[ValueType]):
             value=self.deserialize_value(InternalType(
                 raw_message['Body'],
             )),
-            id=raw_message['ReceiptHandle'],
+            receipt_handle=raw_message['ReceiptHandle'],
         )

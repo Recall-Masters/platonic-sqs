@@ -1,7 +1,7 @@
 import dataclasses
 
 from platonic.queue import Message
-from platonic.sqs.queue import ValueType
+from platonic.sqs.queue.types import ValueType
 
 
 @dataclasses.dataclass

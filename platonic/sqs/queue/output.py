@@ -48,7 +48,7 @@ class SQSOutputQueue(SQSMixin, OutputQueue[ValueType]):
             value=instance,
             # FIXME this probably is not correct. `id` contains MessageId in
             #   one cases and ResponseHandle in others. Inconsistent.
-            id=sqs_response['MessageId'],
+            receipt_handle=sqs_response['MessageId'],
         )
 
     def send_many(self, iterable: Iterable[ValueType]) -> None:

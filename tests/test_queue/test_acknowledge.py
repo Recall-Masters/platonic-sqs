@@ -25,7 +25,7 @@ def test_acknowledge_fake_message(receiver_and_sender: ReceiverAndSender):
 
     message = SQSMessage[Command](
         value=Command.JUMP,
-        id='abc',
+        receipt_handle='abc',
     )
 
     with pytest.raises(MessageDoesNotExist):
