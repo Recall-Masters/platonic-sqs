@@ -3,16 +3,12 @@ requires = ["poetry>=1.0"]
 build-backend = "poetry.masonry.api"
 
 
-[tool.nitpick]
-style = "https://raw.githubusercontent.com/wemake-services/wemake-python-styleguide/master/styles/nitpick-style-wemake.toml"
-
-
 [tool.poetry]
-name = "platonic.sqs"
+name = "platonic-sqs"
 packages = [
   { include = "platonic" },
 ]
-version = "0.1.0"
+version = "0.1.1"
 description = "Platonic wrapper for Amazon Simple Queue Service"
 license = "MIT"
 
