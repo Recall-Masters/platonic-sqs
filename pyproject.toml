@@ -36,7 +36,7 @@ boltons = "^20.2.1"
 platonic = "^0.1.1"
 
 [tool.poetry.dev-dependencies]
-mypy = "^0.750"
+mypy = "^0.790"
 
 wemake-python-styleguide = "^0.13.3"
 flake8-pytest = "^1.3"
