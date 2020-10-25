@@ -1,4 +1,5 @@
 import dataclasses
+import time
 from contextlib import contextmanager
 from typing import Iterator
 
@@ -17,6 +18,8 @@ from platonic.sqs.queue.types import InternalType, ValueType
 @dataclasses.dataclass
 class SQSInputQueue(SQSMixin, InputQueue[ValueType]):
     """Queue to read stuff from."""
+
+    iteration_timeout = 3  # Seconds
 
     def receive(self) -> SQSMessage[ValueType]:
         """
@@ -108,13 +111,22 @@ class SQSInputQueue(SQSMixin, InputQueue[ValueType]):
                 )['Messages']
 
             except KeyError:
-                continue
+                self._pause_while_iterating_over_queue()
+                continue  # pragma: no cover
 
             else:
                 yield from map(
                     self._raw_message_to_sqs_message,
                     raw_messages,
                 )
+
+    def _pause_while_iterating_over_queue(self) -> None:
+        """
+        Wait for a while if a queue is empty.
+
+        Just in case messages appear later.
+        """
+        time.sleep(self.iteration_timeout)
 
     def _receive_messages(
         self,

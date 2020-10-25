@@ -42,7 +42,7 @@ class SQSOutputQueue(SQSMixin, OutputQueue[ValueType]):
                     message_body=message_body,
                 )
 
-            raise
+            raise  # pragma: no cover
 
         return SQSMessage(
             value=instance,
@@ -69,6 +69,9 @@ class SQSOutputQueue(SQSMixin, OutputQueue[ValueType]):
                     Entries=entries,
                 )
 
+            except self.client.exceptions.QueueDoesNotExist as does_not_exist:
+                raise SQSQueueDoesNotExist(queue=self) from does_not_exist
+
             except self.client.exceptions.ClientError as err:
                 if self._error_code_is(err, 'BatchRequestTooLong'):
                     raise MessageTooLarge(
@@ -78,13 +81,17 @@ class SQSOutputQueue(SQSMixin, OutputQueue[ValueType]):
 
                 raise
 
+    def _generate_batch_entry_id(self) -> str:
+        """Generate batch entry id."""
+        return uuid.uuid4().hex
+
     def _generate_send_batch_entry(
         self,
         instance: ValueType,
     ) -> SendMessageBatchRequestEntryTypeDef:
         """Compose the entry for send_message_batch() operation."""
         return SendMessageBatchRequestEntryTypeDef(
-            Id=uuid.uuid4().hex,
+            Id=self._generate_batch_entry_id(),
             MessageBody=self.serialize_value(instance),
         )
 
