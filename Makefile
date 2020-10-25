@@ -4,11 +4,10 @@ SHELL:=/usr/bin/env bash
 lint:
 	mypy platonic/sqs tests/**/*.py
 	flake8 .
-	doc8 -q docs
 
 .PHONY: unit
 unit:
-	pytest
+	pytest tests
 
 .PHONY: package
 package:

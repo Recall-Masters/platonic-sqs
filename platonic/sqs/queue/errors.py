@@ -1,12 +1,11 @@
-from platonic.queue import QueueDoesNotExist, MessageDoesNotExist
-from platonic.sqs.queue.types import ValueType
+from platonic.queue import MessageDoesNotExist, QueueDoesNotExist
 
 
-class SQSQueueDoesNotExist(QueueDoesNotExist[ValueType]):
+class SQSQueueDoesNotExist(QueueDoesNotExist):
     """SQS Queue at {self.queue.url} does not exist."""
 
 
-class SQSMessageDoesNotExist(MessageDoesNotExist[ValueType]):
+class SQSMessageDoesNotExist(MessageDoesNotExist):
     """
     There is no such message in this SQS queue.
 

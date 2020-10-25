@@ -2,7 +2,7 @@
 <project version="4">
   <component name="ProjectModuleManager">
     <modules>
-      <module fileurl="file://$PROJECT_DIR$/.idea/platonic-amazon-sqs.iml" filepath="$PROJECT_DIR$/.idea/platonic-amazon-sqs.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/platonic-sqs.iml" filepath="$PROJECT_DIR$/.idea/platonic-sqs.iml" />
     </modules>
   </component>
 </project>
