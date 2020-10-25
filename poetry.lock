@@ -500,22 +500,6 @@ optional = false
 python-versions = ">=2.6, !=3.0.*, !=3.1.*"
 
 [[package]]
-name = "doc8"
-version = "0.8.1"
-description = "Style checker for Sphinx (or other) RST documentation"
-category = "dev"
-optional = false
-python-versions = "*"
-
-[package.dependencies]
-chardet = "*"
-docutils = "*"
-Pygments = "*"
-restructuredtext-lint = ">=0.7"
-six = "*"
-stevedore = "*"
-
-[[package]]
 name = "docker"
 version = "4.3.1"
 description = "A Python library for the Docker Engine API."
@@ -1796,7 +1780,7 @@ testing = ["pytest (>=3.5,<3.7.3 || >3.7.3)", "pytest-checkdocs (>=1.2.3)", "pyt
 [metadata]
 lock-version = "1.1"
 python-versions = "^3.8"
-content-hash = "dd77ead210fead5040d7eb635bdd5a1cafb631f65aaac04b9b7b8e83f94b7da9"
+content-hash = "25e6ee4fecd999e01ab70f815d702ede5636b2e317bd307bb660ddeb85df3555"
 
 [metadata.files]
 astor = [
@@ -1979,10 +1963,6 @@ darglint = [
 decorator = [
     {file = "decorator-4.4.2-py2.py3-none-any.whl", hash = "sha256:41fa54c2a0cc4ba648be4fd43cff00aedf5b9465c9bf18d64325bc225f08f760"},
     {file = "decorator-4.4.2.tar.gz", hash = "sha256:e3a62f0520172440ca0dcc823749319382e377f37f140a0b99ef45fecb84bfe7"},
-]
-doc8 = [
-    {file = "doc8-0.8.1-py2.py3-none-any.whl", hash = "sha256:4d58a5c8c56cedd2b2c9d6e3153be5d956cf72f6051128f0f2255c66227df721"},
-    {file = "doc8-0.8.1.tar.gz", hash = "sha256:4d1df12598807cf08ffa9a1d5ef42d229ee0de42519da01b768ff27211082c12"},
 ]
 docker = [
     {file = "docker-4.3.1-py2.py3-none-any.whl", hash = "sha256:13966471e8bc23b36bfb3a6fb4ab75043a5ef1dac86516274777576bed3b9828"},
