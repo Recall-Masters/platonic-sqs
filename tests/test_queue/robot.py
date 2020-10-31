@@ -6,7 +6,7 @@ from typing import Tuple
 
 import typecasts
 
-from platonic.sqs.queue import SQSInputQueue, SQSOutputQueue
+from platonic.sqs.queue import SQSReceiver, SQSSender
 
 
 class Command(str, Enum):
@@ -18,11 +18,11 @@ class Command(str, Enum):
     JUMP = 'jump'
 
 
-class CommandSender(SQSOutputQueue[Command]):
+class CommandSender(SQSSender[Command]):
     """Send commands to robot."""
 
 
-class CommandReceiver(SQSInputQueue[Command]):
+class CommandReceiver(SQSReceiver[Command]):
     """Get commands from the robot."""
 
 

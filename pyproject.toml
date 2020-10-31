@@ -8,7 +8,7 @@ name = "platonic-sqs"
 packages = [
   { include = "platonic" },
 ]
-version = "0.1.2"
+version = "1.0.0"
 description = "Platonic wrapper for Amazon Simple Queue Service"
 license = "MIT"
 

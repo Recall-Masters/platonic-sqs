@@ -8,7 +8,7 @@ from mypy_boto3_sqs.type_defs import (
     ReceiveMessageResultTypeDef,
 )
 
-from platonic.queue import InputQueue, Message, MessageReceiveTimeout
+from platonic.queue import Message, MessageReceiveTimeout, Receiver
 from platonic.sqs.queue.errors import SQSMessageDoesNotExist
 from platonic.sqs.queue.message import SQSMessage
 from platonic.sqs.queue.sqs import MAX_NUMBER_OF_MESSAGES, SQSMixin
@@ -16,7 +16,7 @@ from platonic.sqs.queue.types import InternalType, ValueType
 
 
 @dataclasses.dataclass
-class SQSInputQueue(SQSMixin, InputQueue[ValueType]):
+class SQSReceiver(SQSMixin, Receiver[ValueType]):
     """Queue to read stuff from."""
 
     iteration_timeout = 3  # Seconds
