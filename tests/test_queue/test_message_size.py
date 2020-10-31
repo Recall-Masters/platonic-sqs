@@ -3,14 +3,14 @@ import pytest
 from mypy_boto3_sqs import Client as SQSClient
 
 from platonic.queue import MessageTooLarge
-from platonic.sqs.queue import SQSInputQueue, SQSOutputQueue
+from platonic.sqs.queue import SQSReceiver, SQSSender
 
 
-class LetterSender(SQSOutputQueue[str]):
+class LetterSender(SQSSender[str]):
     """Sending letters to Santa Claus."""
 
 
-class LetterReceiver(SQSInputQueue[str]):
+class LetterReceiver(SQSReceiver[str]):
     """Receiving letters from children."""
 
 

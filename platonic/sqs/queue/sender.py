@@ -7,7 +7,7 @@ from boltons.iterutils import chunked_iter
 from botocore.exceptions import ClientError
 from mypy_boto3_sqs.type_defs import SendMessageBatchRequestEntryTypeDef
 
-from platonic.queue import MessageTooLarge, OutputQueue
+from platonic.queue import MessageTooLarge, Sender
 from platonic.sqs.queue.errors import SQSQueueDoesNotExist
 from platonic.sqs.queue.message import SQSMessage
 from platonic.sqs.queue.sqs import (
@@ -19,7 +19,7 @@ from platonic.sqs.queue.types import ValueType
 
 
 @dataclasses.dataclass
-class SQSOutputQueue(SQSMixin, OutputQueue[ValueType]):
+class SQSSender(SQSMixin, Sender[ValueType]):
     """Queue to write stuff into."""
 
     def send(self, instance: ValueType) -> SQSMessage[ValueType]:
