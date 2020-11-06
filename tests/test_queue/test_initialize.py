@@ -13,9 +13,9 @@ class MyDynamicSender(SQSSender[int]):
 
 def initialize_dynamically():
     """Instantiate a sender class and provide the URL."""
-    assert MyDynamicSender(url='...').url == '...'
+    assert MyDynamicSender(url='...').get_url() == '...'
 
 
 def test_initialize_statically():
     """Instantiate a sender class where URL is already specified."""
-    assert MyStaticSender().url == 'foo'
+    assert MyStaticSender().get_url() == 'foo'
