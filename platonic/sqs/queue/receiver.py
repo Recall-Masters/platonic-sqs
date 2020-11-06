@@ -1,4 +1,3 @@
-import dataclasses
 import time
 from contextlib import contextmanager
 from typing import Iterator
@@ -15,7 +14,6 @@ from platonic.sqs.queue.sqs import MAX_NUMBER_OF_MESSAGES, SQSMixin
 from platonic.sqs.queue.types import InternalType, ValueType
 
 
-@dataclasses.dataclass
 class SQSReceiver(SQSMixin, Receiver[ValueType]):
     """Queue to read stuff from."""
 
@@ -74,7 +72,7 @@ class SQSReceiver(SQSMixin, Receiver[ValueType]):
         """
         try:
             self.client.delete_message(
-                QueueUrl=self.url,
+                QueueUrl=self.get_url(),
                 ReceiptHandle=message.receipt_handle,
             )
 
@@ -139,7 +137,7 @@ class SQSReceiver(SQSMixin, Receiver[ValueType]):
         Do not override.
         """
         return self.client.receive_message(
-            QueueUrl=self.url,
+            QueueUrl=self.get_url(),
             MaxNumberOfMessages=message_count,
             **kwargs,
         )
