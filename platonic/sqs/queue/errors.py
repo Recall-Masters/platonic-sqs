@@ -5,7 +5,7 @@ from documented import DocumentedError
 
 from platonic.queue import MessageDoesNotExist, QueueDoesNotExist
 
-if typing.TYPE_CHECKING:
+if typing.TYPE_CHECKING:  # pragma: no cover
     from platonic.sqs.queue.sqs import SQSMixin   # noqa: WPS433
 
 

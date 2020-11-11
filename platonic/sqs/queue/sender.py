@@ -26,7 +26,7 @@ class SQSSender(SQSMixin, Sender[ValueType]):
 
         try:
             sqs_response = self.client.send_message(
-                QueueUrl=self.get_url(),
+                QueueUrl=self.url,
                 MessageBody=message_body,
             )
 
@@ -63,7 +63,7 @@ class SQSSender(SQSMixin, Sender[ValueType]):
 
             try:
                 self.client.send_message_batch(
-                    QueueUrl=self.get_url(),
+                    QueueUrl=self.url,
                     Entries=entries,
                 )
 

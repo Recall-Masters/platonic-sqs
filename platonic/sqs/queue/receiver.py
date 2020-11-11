@@ -72,7 +72,7 @@ class SQSReceiver(SQSMixin, Receiver[ValueType]):
         """
         try:
             self.client.delete_message(
-                QueueUrl=self.get_url(),
+                QueueUrl=self.url,
                 ReceiptHandle=message.receipt_handle,
             )
 
@@ -137,7 +137,7 @@ class SQSReceiver(SQSMixin, Receiver[ValueType]):
         Do not override.
         """
         return self.client.receive_message(
-            QueueUrl=self.get_url(),
+            QueueUrl=self.url,
             MaxNumberOfMessages=message_count,
             **kwargs,
         )

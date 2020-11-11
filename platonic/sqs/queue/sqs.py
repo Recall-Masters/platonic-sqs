@@ -1,7 +1,5 @@
-from functools import partial
 from typing import Optional
 
-import attr
 import boto3
 from mypy_boto3_sqs import Client as SQSClient
 from typecasts import Typecasts, casts
@@ -15,18 +13,41 @@ MAX_NUMBER_OF_MESSAGES = 10
 MAX_MESSAGE_SIZE = 262144
 
 
-@attr.s(auto_attribs=True)
 class SQSMixin:
     """Common fields for SQS queue classes."""
 
-    url: Optional[str] = attr.ib(default=None)
-    internal_type: type = attr.ib(default=str)
-    typecasts: Typecasts = attr.ib(default=casts)
-    client: SQSClient = attr.ib(factory=partial(boto3.client, 'sqs'))
+    url: str
+    typecasts: Typecasts
+    internal_type: type
+    client: SQSClient
 
-    def get_url(self) -> str:
-        """Return URL of the SQS queue."""
-        if self.url is None:
+    def __init__(
+        self,
+        url: Optional[str] = None,
+        typecasts: Optional[Typecasts] = None,
+        internal_type: Optional[type] = None,
+        client: Optional[SQSClient] = None,
+    ):
+        """SQS queue endpoint."""
+        self.url = url or getattr(self, 'url', None)
+
+        if not self.url:
             raise SQSQueueURLNotSpecified(instance=self)
 
-        return self.url
+        if typecasts is not None:
+            self.typecasts = typecasts
+
+        elif getattr(self, 'typecasts', None) is None:
+            self.typecasts = casts
+
+        self.internal_type = (
+            internal_type or
+            getattr(self, 'internal_type', None) or
+            str
+        )
+
+        self.client = (
+            client or
+            getattr(self, 'client', None) or
+            boto3.client('sqs')
+        )
