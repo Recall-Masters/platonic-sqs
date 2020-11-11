@@ -1,4 +1,3 @@
-import dataclasses
 import time
 from contextlib import contextmanager
 from typing import Iterator
@@ -15,7 +14,6 @@ from platonic.sqs.queue.sqs import MAX_NUMBER_OF_MESSAGES, SQSMixin
 from platonic.sqs.queue.types import InternalType, ValueType
 
 
-@dataclasses.dataclass
 class SQSReceiver(SQSMixin, Receiver[ValueType]):
     """Queue to read stuff from."""
 

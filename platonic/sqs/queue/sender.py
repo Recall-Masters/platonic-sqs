@@ -1,4 +1,3 @@
-import dataclasses
 import json
 import uuid
 from typing import Iterable
@@ -18,7 +17,6 @@ from platonic.sqs.queue.sqs import (
 from platonic.sqs.queue.types import ValueType
 
 
-@dataclasses.dataclass
 class SQSSender(SQSMixin, Sender[ValueType]):
     """Queue to write stuff into."""
 
@@ -51,7 +49,7 @@ class SQSSender(SQSMixin, Sender[ValueType]):
             receipt_handle=sqs_response['MessageId'],
         )
 
-    def send_many(self, iterable: Iterable[ValueType]) -> None:
+    def send_many(self, iterable: Iterable[ValueType]) -> None:  # noqa: WPS231
         """Send multiple messages."""
         # Per one API call, we can send no more than MAX_NUMBER_OF_MESSAGES
         # individual messages.
