@@ -1,64 +1,52 @@
 import time
 from contextlib import contextmanager
-from typing import Iterator
+from typing import Iterator, Optional
 
 from mypy_boto3_sqs.type_defs import (
     MessageTypeDef,
     ReceiveMessageResultTypeDef,
 )
 
-from platonic.queue import Message, MessageReceiveTimeout, Receiver
+from platonic.queue import MessageReceiveTimeout, Receiver
 from platonic.sqs.queue.errors import SQSMessageDoesNotExist
 from platonic.sqs.queue.message import SQSMessage
 from platonic.sqs.queue.sqs import MAX_NUMBER_OF_MESSAGES, SQSMixin
 from platonic.sqs.queue.types import InternalType, ValueType
+from platonic.types import Infinity
 
 
-class SQSReceiver(SQSMixin, Receiver[ValueType]):
+class SQSReceiver(SQSMixin, Receiver[ValueType]):   # noqa: WPS214
     """Queue to read stuff from."""
 
+    # How long to wait between attempts to fetch messages from the queue
     iteration_timeout = 3  # Seconds
+
+    @property
+    def timeout_seconds(self) -> Optional[int]:
+        """Convert timeout to seconds or to None."""
+        if isinstance(self.timeout, Infinity):
+            return None
+
+        return int(self.timeout.total_seconds())
 
     def receive(self) -> SQSMessage[ValueType]:
         """
         Fetch one message from the queue.
 
-        This operation is a blocking one, and will hang until a message is
-        retrieved.
+        If SQSReceiver.timeout == INFINITY this method will block until there is
+        a message in the queue. If the timeout is a timedelta value, the method
+        will wait for the specified period and fail with MessageReceiveTimeout
+        exception if no messages arrive.
 
         The `id` field of `Message` class is provided with `ReceiptHandle`
         property of the received message. This is a non-global identifier
         which is necessary to delete the message from the queue using
         `self.acknowledge()`.
         """
-        while True:
-            try:
-                raw_message, = self._receive_messages(
-                    message_count=1,
-                )['Messages']
+        if self.timeout_seconds:
+            return self._receive_with_timeout()
 
-            except KeyError:
-                continue
-
-            else:
-                return self._raw_message_to_sqs_message(raw_message)
-
-    def receive_with_timeout(self, timeout: int) -> Message[ValueType]:
-        """Receive with timeout."""
-        response = self._receive_messages(
-            message_count=1,
-            WaitTimeSeconds=timeout,
-        )
-
-        raw_messages = response.get('Messages')
-        if raw_messages:
-            raw_message, = raw_messages
-            return self._raw_message_to_sqs_message(raw_message)
-
-        raise MessageReceiveTimeout(
-            queue=self,
-            timeout=timeout,
-        )
+        return self._receive_blocking()
 
     def acknowledge(
         self,
@@ -106,9 +94,16 @@ class SQSReceiver(SQSMixin, Receiver[ValueType]):
             try:
                 raw_messages = self._receive_messages(
                     message_count=MAX_NUMBER_OF_MESSAGES,
+                    timeout_seconds=self.timeout_seconds,
                 )['Messages']
 
             except KeyError:
+                # We got no messages.
+                if self.timeout_seconds is None:
+                    # If we have a timeout configured we just stop iteration,
+                    return
+
+                # but if timeout is infinity, we should just try again.
                 self._pause_while_iterating_over_queue()
                 continue  # pragma: no cover
 
@@ -129,6 +124,7 @@ class SQSReceiver(SQSMixin, Receiver[ValueType]):
     def _receive_messages(
         self,
         message_count: int = 1,
+        timeout_seconds: Optional[int] = None,
         **kwargs,
     ) -> ReceiveMessageResultTypeDef:
         """
@@ -136,6 +132,11 @@ class SQSReceiver(SQSMixin, Receiver[ValueType]):
 
         Do not override.
         """
+        if 'WaitTimeSeconds' not in kwargs and timeout_seconds:
+            kwargs.update({
+                'WaitTimeSeconds': timeout_seconds,
+            })
+
         return self.client.receive_message(
             QueueUrl=self.url,
             MaxNumberOfMessages=message_count,
@@ -146,9 +147,41 @@ class SQSReceiver(SQSMixin, Receiver[ValueType]):
         self, raw_message: MessageTypeDef,
     ) -> SQSMessage[ValueType]:
         """Convert a raw SQS message to the proper SQSMessage instance."""
+        # noinspection PyTypeChecker
         return SQSMessage(
             value=self.deserialize_value(InternalType(
                 raw_message['Body'],
             )),
             receipt_handle=raw_message['ReceiptHandle'],
         )
+
+    def _receive_with_timeout(self) -> SQSMessage[ValueType]:
+        """Receive message with timeout."""
+        response = self._receive_messages(
+            message_count=1,
+            timeout_seconds=self.timeout_seconds,
+        )
+
+        raw_messages = response.get('Messages')
+        if raw_messages:
+            return self._raw_message_to_sqs_message(raw_messages[0])
+
+        raise MessageReceiveTimeout(
+            queue=self,
+            timeout=self.timeout_seconds,
+        )
+
+    def _receive_blocking(self) -> SQSMessage[ValueType]:
+        """Fetch message from the queue in a blocking way."""
+        while True:
+            try:
+                raw_message = self._receive_messages(
+                    message_count=1,
+                    timeout_seconds=None,
+                )['Messages'][0]
+
+            except KeyError:
+                continue
+
+            else:
+                return self._raw_message_to_sqs_message(raw_message)
