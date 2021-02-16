@@ -26,7 +26,7 @@ class MyDynamicSender(SQSSender[int]):
 
 
 def test_no_url():
-    with pytest.raises(SQSQueueURLNotSpecified) as err:
+    with pytest.raises(TypeError) as err:
         MyDynamicSender()
 
     assert 'sqs' in str(err.value)  # noqa: WPS441

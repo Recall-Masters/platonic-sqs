@@ -4,13 +4,15 @@ import contexttimer
 import pytest
 
 from platonic.queue import MessageReceiveTimeout
+from platonic.timeout import ConstantTimeout
+
 from tests.test_queue.robot import Command, ReceiverAndSender
 
 
 def test_empty_queue(receiver_and_sender: ReceiverAndSender):
     """Empty queue leads to waiting for a while and empty response."""
     receiver, _sender = receiver_and_sender
-    receiver.timeout = timedelta(seconds=1)
+    receiver.timeout = ConstantTimeout(period=timedelta(seconds=1))
 
     with contexttimer.Timer() as timer:
         with pytest.raises(MessageReceiveTimeout):
@@ -24,7 +26,7 @@ def test_empty_queue(receiver_and_sender: ReceiverAndSender):
 def test_non_empty_queue(receiver_and_sender: ReceiverAndSender):
     """Non empty queue leads to immediate response."""
     receiver, sender = receiver_and_sender
-    receiver.timeout = timedelta(seconds=10)
+    receiver.timeout = ConstantTimeout(period=timedelta(seconds=10))
 
     sender.send_many([Command.JUMP, Command.RIGHT])
 

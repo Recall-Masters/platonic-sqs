@@ -14,7 +14,10 @@ from platonic.timeout.base import BaseTimeout
 
 from platonic.sqs.queue.errors import SQSMessageDoesNotExist
 from platonic.sqs.queue.message import SQSMessage
-from platonic.sqs.queue.sqs import MAX_NUMBER_OF_MESSAGES, SQSMixin
+from platonic.sqs.queue.sqs import (
+    MAX_NUMBER_OF_MESSAGES, SQSMixin,
+    MAX_WAIT_TIME_SECONDS,
+)
 from platonic.sqs.queue.types import InternalType, ValueType
 
 
@@ -23,6 +26,7 @@ class SQSReceiver(SQSMixin, Receiver[ValueType]):   # noqa: WPS214
     """Queue to read stuff from."""
 
     timeout: BaseTimeout = field(default_factory=InfiniteTimeout)
+    max_wait_time_seconds: int = MAX_WAIT_TIME_SECONDS
 
     # How long to wait between attempts to fetch messages from the queue
     iteration_timeout = 3  # Seconds
@@ -39,20 +43,41 @@ class SQSReceiver(SQSMixin, Receiver[ValueType]):   # noqa: WPS214
         """
         Fetch one message from the queue.
 
-        If SQSReceiver.timeout == INFINITY this method will block until there is
-        a message in the queue. If the timeout is a timedelta value, the method
-        will wait for the specified period and fail with MessageReceiveTimeout
-        exception if no messages arrive.
+        If the queue is empty, by default block forever until a message arrives.
+        See `timeout` argument of `SQSReceiver` class to see how to change that.
 
         The `id` field of `Message` class is provided with `ReceiptHandle`
         property of the received message. This is a non-global identifier
         which is necessary to delete the message from the queue using
         `self.acknowledge()`.
         """
-        if self.timeout_seconds:
-            return self._receive_with_timeout()
+        with self.timeout.timer() as timer:
+            while not timer.is_expired:
+                # Calculate the timeout value for SQS Long Polling.
+                timeout_seconds = int(min(
+                    # The value can be no higher than 20 seconds
+                    self.max_wait_time_seconds,
 
-        return self._receive_blocking()
+                    # But if the remaining allowed time is positive and
+                    # less than 20, we use that value as timeout to make sure
+                    # we do not exceed the period specified by the user.
+                    max(
+                        # Here we take precaution against negative values.
+                        timer.remaining_seconds,
+                        0,
+                    ),
+                ))
+
+                try:
+                    messages = self._receive_messages(
+                        message_count=1,
+                        timeout_seconds=timeout_seconds,
+                    )['Messages']
+                except KeyError:
+                    # We have not received any messages. Trying again.
+                    continue
+
+                return self._raw_message_to_sqs_message(messages[0])
 
     def acknowledge(
         self,

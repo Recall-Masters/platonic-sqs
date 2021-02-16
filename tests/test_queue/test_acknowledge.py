@@ -3,6 +3,8 @@ from datetime import timedelta
 import pytest
 
 from platonic.queue import MessageDoesNotExist, MessageReceiveTimeout
+from platonic.timeout import ConstantTimeout
+
 from platonic.sqs.queue import SQSMessage
 from tests.test_queue.robot import Command, ReceiverAndSender
 
@@ -10,7 +12,7 @@ from tests.test_queue.robot import Command, ReceiverAndSender
 def test_send_and_acknowledge(receiver_and_sender: ReceiverAndSender):
     """We receive a command, acknowledge it, and now queue is empty."""
     receiver, sender = receiver_and_sender
-    receiver.timeout = timedelta(seconds=2)
+    receiver.timeout = ConstantTimeout(period=timedelta(seconds=2))
 
     sender.send(Command.JUMP)
 

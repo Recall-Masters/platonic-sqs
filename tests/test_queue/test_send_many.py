@@ -3,8 +3,9 @@ from datetime import timedelta
 import pytest
 from botocore.exceptions import ClientError
 from mypy_boto3_sqs import Client as SQSClient
-
 from platonic.queue import MessageReceiveTimeout, QueueDoesNotExist
+from platonic.timeout import ConstantTimeout
+
 from tests.test_queue.robot import Command, CommandSender, ReceiverAndSender
 
 
@@ -27,7 +28,7 @@ def test_non_existing_queue(mock_sqs_client: SQSClient):
 def test_send_many(receiver_and_sender: ReceiverAndSender):
     """The messages put into queue keep their order."""
     receiver, sender = receiver_and_sender
-    receiver.timeout = timedelta(seconds=1)
+    receiver.timeout = ConstantTimeout(period=timedelta(minutes=1))
 
     sent_commands = [Command.RIGHT, Command.FORWARD, Command.LEFT, Command.JUMP]
 
