@@ -79,6 +79,6 @@ def test_empty_queue(mock_sqs_client: SQSClient):
         timeout=ConstantTimeout(period=timedelta(seconds=5))
     )
 
-    for sqs_message in receiver:
+    for _sqs_message in receiver:
         # Since the queue is empty, this last line will never execute.
         raise ValueError('Queue is not empty!')

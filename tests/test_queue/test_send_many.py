@@ -28,7 +28,7 @@ def test_non_existing_queue(mock_sqs_client: SQSClient):
 def test_send_many(receiver_and_sender: ReceiverAndSender):
     """The messages put into queue keep their order."""
     receiver, sender = receiver_and_sender
-    receiver.timeout = ConstantTimeout(period=timedelta(minutes=1))
+    receiver.timeout = ConstantTimeout(period=timedelta(seconds=5))
 
     sent_commands = [Command.RIGHT, Command.FORWARD, Command.LEFT, Command.JUMP]
 

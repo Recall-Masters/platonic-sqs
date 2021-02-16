@@ -32,7 +32,7 @@ def receiver_and_sender(
     sqs_queue_url = mock_sqs_client.create_queue(
         QueueName='robot_commands',
         Attributes={
-            'VisibilityTimeout': '3',
+            'VisibilityTimeout': '60',
         },
     )['QueueUrl']
 
