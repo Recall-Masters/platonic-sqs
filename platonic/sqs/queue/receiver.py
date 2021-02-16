@@ -1,5 +1,6 @@
 import time
 from contextlib import contextmanager
+from dataclasses import dataclass, field
 from typing import Iterator, Optional
 
 from mypy_boto3_sqs.type_defs import (
@@ -8,15 +9,20 @@ from mypy_boto3_sqs.type_defs import (
 )
 
 from platonic.queue import MessageReceiveTimeout, Receiver
+from platonic.timeout import InfiniteTimeout
+from platonic.timeout.base import BaseTimeout
+
 from platonic.sqs.queue.errors import SQSMessageDoesNotExist
 from platonic.sqs.queue.message import SQSMessage
 from platonic.sqs.queue.sqs import MAX_NUMBER_OF_MESSAGES, SQSMixin
 from platonic.sqs.queue.types import InternalType, ValueType
-from platonic.types import Infinity
 
 
+@dataclass
 class SQSReceiver(SQSMixin, Receiver[ValueType]):   # noqa: WPS214
     """Queue to read stuff from."""
+
+    timeout: BaseTimeout = field(default_factory=InfiniteTimeout)
 
     # How long to wait between attempts to fetch messages from the queue
     iteration_timeout = 3  # Seconds
