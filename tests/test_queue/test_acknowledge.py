@@ -3,9 +3,8 @@ from datetime import timedelta
 import pytest
 
 from platonic.queue import MessageDoesNotExist, MessageReceiveTimeout
-from platonic.timeout import ConstantTimeout
-
 from platonic.sqs.queue import SQSMessage
+from platonic.timeout import ConstantTimeout
 from tests.test_queue.robot import Command, ReceiverAndSender
 
 

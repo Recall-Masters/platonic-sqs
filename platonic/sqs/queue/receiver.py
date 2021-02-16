@@ -1,7 +1,6 @@
-import time
 from contextlib import contextmanager
 from dataclasses import dataclass, field
-from typing import Iterator, Optional, List
+from typing import Iterator, Optional
 
 from mypy_boto3_sqs.type_defs import (
     MessageTypeDef,
@@ -9,20 +8,20 @@ from mypy_boto3_sqs.type_defs import (
 )
 
 from platonic.queue import MessageReceiveTimeout, Receiver
-from platonic.timeout import InfiniteTimeout
-from platonic.timeout.base import BaseTimeout, BaseTimer
-
 from platonic.sqs.queue.errors import SQSMessageDoesNotExist
 from platonic.sqs.queue.message import SQSMessage
 from platonic.sqs.queue.sqs import (
-    MAX_NUMBER_OF_MESSAGES, SQSMixin,
+    MAX_NUMBER_OF_MESSAGES,
     MAX_WAIT_TIME_SECONDS,
+    SQSMixin,
 )
 from platonic.sqs.queue.types import InternalType, ValueType
+from platonic.timeout import InfiniteTimeout
+from platonic.timeout.base import BaseTimeout, BaseTimer
 
 
 @dataclass
-class SQSReceiver(SQSMixin, Receiver[ValueType]):   # noqa: WPS214
+class SQSReceiver(SQSMixin, Receiver[ValueType]):
     """Queue to read stuff from."""
 
     timeout: BaseTimeout = field(default_factory=InfiniteTimeout)
@@ -41,34 +40,6 @@ class SQSReceiver(SQSMixin, Receiver[ValueType]):   # noqa: WPS214
         `self.acknowledge()`.
         """
         return next(self._fetch_messages_with_timeout(messages_count=1))
-
-    def _fetch_messages_with_timeout(
-        self,
-        messages_count: int,
-    ) -> Iterator[SQSMessage[ValueType]]:
-        """Within timeout, retrieve the requested number of messages."""
-        with self.timeout.timer() as timer:
-            while not timer.is_expired:
-                # Calculate the timeout value for SQS Long Polling.
-                try:
-                    raw_messages = self._receive_messages(
-                        message_count=messages_count,
-                        timeout_seconds=self._wait_time_seconds(timer),
-                    )['Messages']
-                except KeyError:
-                    # We have not received any messages. Trying again.
-                    continue
-
-                yield from map(
-                    self._raw_message_to_sqs_message,
-                    raw_messages,
-                )
-                return
-
-        raise MessageReceiveTimeout(
-            queue=self,
-            timeout=0,
-        )
 
     def acknowledge(
         self,
@@ -145,6 +116,34 @@ class SQSReceiver(SQSMixin, Receiver[ValueType]):   # noqa: WPS214
             QueueUrl=self.url,
             MaxNumberOfMessages=message_count,
             **kwargs,
+        )
+
+    def _fetch_messages_with_timeout(
+        self,
+        messages_count: int,
+    ) -> Iterator[SQSMessage[ValueType]]:
+        """Within timeout, retrieve the requested number of messages."""
+        with self.timeout.timer() as timer:
+            while not timer.is_expired:
+                # Calculate the timeout value for SQS Long Polling.
+                try:
+                    raw_messages = self._receive_messages(
+                        message_count=messages_count,
+                        timeout_seconds=self._wait_time_seconds(timer),
+                    )['Messages']
+                except KeyError:
+                    # We have not received any messages. Trying again.
+                    continue
+
+                yield from map(
+                    self._raw_message_to_sqs_message,
+                    raw_messages,
+                )
+                return
+
+        raise MessageReceiveTimeout(
+            queue=self,
+            timeout=0,
         )
 
     def _raw_message_to_sqs_message(

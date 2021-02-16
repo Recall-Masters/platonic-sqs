@@ -15,5 +15,10 @@ package:
 	pip check
 	safety check --bare --full-report
 
+
+.PHONY: format
+format:
+	poetry run isort -rc platonic tests
+
 .PHONY: test
 test: lint unit package

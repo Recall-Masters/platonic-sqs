@@ -1,8 +1,6 @@
-import pytest
-from typecasts import Typecasts, casts
+from typecasts import Typecasts
 
 from platonic.sqs.queue import SQSSender
-from platonic.sqs.queue.errors import SQSQueueURLNotSpecified
 
 OWN_TYPECASTS = Typecasts()
 

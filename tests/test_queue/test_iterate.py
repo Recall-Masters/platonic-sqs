@@ -3,8 +3,8 @@ from datetime import timedelta
 from itertools import islice
 
 from mypy_boto3_sqs import Client as SQSClient
-from platonic.timeout import ConstantTimeout
 
+from platonic.timeout import ConstantTimeout
 from tests.test_queue.robot import Command, CommandReceiver, ReceiverAndSender
 
 
@@ -60,9 +60,7 @@ def test_empty_queue(mock_sqs_client: SQSClient):
 
     receiver = CommandReceiver(
         url=sqs_queue_url,
-        timeout=ConstantTimeout(period=timedelta(seconds=5))
+        timeout=ConstantTimeout(period=timedelta(seconds=5)),
     )
 
-    for _sqs_message in receiver:
-        # Since the queue is empty, this last line will never execute.
-        raise ValueError('Queue is not empty!')
+    assert not list(receiver)

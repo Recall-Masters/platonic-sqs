@@ -1,10 +1,11 @@
-from dataclasses import field, dataclass
+from dataclasses import dataclass, field
 from functools import partial
 
 import boto3
 from mypy_boto3_sqs import Client as SQSClient
-from platonic.const import const
 from typecasts import Typecasts, casts
+
+from platonic.const import const
 
 # Max number of SQS messages receivable by single API call.
 MAX_NUMBER_OF_MESSAGES = 10
