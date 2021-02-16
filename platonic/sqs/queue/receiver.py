@@ -28,33 +28,6 @@ class SQSReceiver(SQSMixin, Receiver[ValueType]):   # noqa: WPS214
     timeout: BaseTimeout = field(default_factory=InfiniteTimeout)
     max_wait_time_seconds: int = MAX_WAIT_TIME_SECONDS
 
-    # How long to wait between attempts to fetch messages from the queue
-    iteration_timeout = 3  # Seconds
-
-    @property
-    def timeout_seconds(self) -> Optional[int]:
-        """Convert timeout to seconds or to None."""
-        if isinstance(self.timeout, Infinity):
-            return None
-
-        return int(self.timeout.total_seconds())
-
-    def _wait_time_seconds(self, timer: BaseTimer) -> int:
-        """Based on timer instance calculate SQS WaitTimeSeconds parameter."""
-        return int(min(
-            # The value can be no higher than 20 seconds
-            float(self.max_wait_time_seconds),
-
-            # But if the remaining allowed time is positive and
-            # less than 20, we use that value as timeout to make sure
-            # we do not exceed the period specified by the user.
-            max(
-                # Here we take precaution against negative values.
-                timer.remaining_seconds,
-                0,
-            ),
-        ))
-
     def receive(self) -> SQSMessage[ValueType]:
         """
         Fetch one message from the queue.
@@ -152,14 +125,6 @@ class SQSReceiver(SQSMixin, Receiver[ValueType]):   # noqa: WPS214
             except MessageReceiveTimeout:
                 return
 
-    def _pause_while_iterating_over_queue(self) -> None:
-        """
-        Wait for a while if a queue is empty.
-
-        Just in case messages appear later.
-        """
-        time.sleep(self.iteration_timeout)
-
     def _receive_messages(
         self,
         message_count: int = 1,
@@ -194,33 +159,18 @@ class SQSReceiver(SQSMixin, Receiver[ValueType]):   # noqa: WPS214
             receipt_handle=raw_message['ReceiptHandle'],
         )
 
-    def _receive_with_timeout(self) -> SQSMessage[ValueType]:
-        """Receive message with timeout."""
-        response = self._receive_messages(
-            message_count=1,
-            timeout_seconds=self.timeout_seconds,
-        )
+    def _wait_time_seconds(self, timer: BaseTimer) -> int:
+        """Based on timer instance, calculate SQS WaitTimeSeconds parameter."""
+        return int(min(
+            # The value can be no higher than 20 seconds
+            float(self.max_wait_time_seconds),
 
-        raw_messages = response.get('Messages')
-        if raw_messages:
-            return self._raw_message_to_sqs_message(raw_messages[0])
-
-        raise MessageReceiveTimeout(
-            queue=self,
-            timeout=self.timeout_seconds,
-        )
-
-    def _receive_blocking(self) -> SQSMessage[ValueType]:
-        """Fetch message from the queue in a blocking way."""
-        while True:
-            try:
-                raw_message = self._receive_messages(
-                    message_count=1,
-                    timeout_seconds=None,
-                )['Messages'][0]
-
-            except KeyError:
-                continue
-
-            else:
-                return self._raw_message_to_sqs_message(raw_message)
+            # But if the remaining allowed time is positive and
+            # less than 20, we use that value as timeout to make sure
+            # we do not exceed the period specified by the user.
+            max(
+                # Here we take precaution against negative values.
+                timer.remaining_seconds,
+                0,
+            ),
+        ))

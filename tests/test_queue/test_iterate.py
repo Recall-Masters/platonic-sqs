@@ -2,26 +2,10 @@ import operator
 from datetime import timedelta
 from itertools import islice
 
-import contexttimer
-import pytest
 from mypy_boto3_sqs import Client as SQSClient
 from platonic.timeout import ConstantTimeout
 
 from tests.test_queue.robot import Command, CommandReceiver, ReceiverAndSender
-
-
-def test_pause(receiver_and_sender: ReceiverAndSender):
-    """Wait a bit if the queue is empty."""
-    receiver, _sender = receiver_and_sender
-
-    assert receiver.iteration_timeout == 3
-
-    with contexttimer.Timer() as timer:
-        receiver._pause_while_iterating_over_queue()
-
-        elapsed_time = timer.elapsed
-
-    assert round(elapsed_time) <= receiver.iteration_timeout
 
 
 def test_iterate_imperative(receiver_and_sender: ReceiverAndSender):
