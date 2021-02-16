@@ -12,7 +12,7 @@ from tests.test_queue.robot import (
 )
 
 
-@pytest.fixture()
+@pytest.fixture(scope='module')
 def mock_sqs_client():
     """Mocked AWS Credentials for moto."""
     os.environ['AWS_ACCESS_KEY_ID'] = 'testing'
@@ -40,3 +40,13 @@ def receiver_and_sender(
     receiver = CommandReceiver(url=sqs_queue_url)
 
     return receiver, sender
+
+
+@pytest.fixture(scope='module')
+def sqs_queue_url(mock_sqs_client: SQSClient) -> str:
+    return mock_sqs_client.create_queue(
+        QueueName='test_queue',
+        Attributes={
+            'VisibilityTimeout': '60',
+        },
+    )['QueueUrl']
