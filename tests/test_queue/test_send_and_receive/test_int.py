@@ -20,14 +20,14 @@ typecasts.casts[str, int] = int
     [
         SQSSender[int],
         types.new_class('IntSender', (SQSSender[int], ), {}),
-    ]
+    ],
 )
 @pytest.mark.parametrize(
     'receiver_class',
     [
         SQSReceiver[int],
         types.new_class('IntReceiver', (SQSReceiver[int], ), {}),
-    ]
+    ],
 )
 @pytest.mark.parametrize(
     'timeout',
@@ -35,7 +35,7 @@ typecasts.casts[str, int] = int
         InfiniteTimeout(),
         ConstantTimeout(period=timedelta(seconds=5)),
         ConstantTimeout(period=timedelta(minutes=5)),
-    ]
+    ],
 )
 def test_send_and_receive_int(
     message_value: int,

@@ -4,9 +4,8 @@ import contexttimer
 import pytest
 
 from platonic.queue import MessageReceiveTimeout
-from platonic.timeout import ConstantTimeout
-
 from platonic.sqs.queue import SQSReceiver
+from platonic.timeout import ConstantTimeout
 from tests.test_queue.robot import Command, ReceiverAndSender
 
 
