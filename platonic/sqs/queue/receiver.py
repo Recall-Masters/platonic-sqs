@@ -184,6 +184,7 @@ class SQSReceiver(SQSMixin, Receiver[ValueType]):
         messages: Iterable[SQSMessage[ValueType]],
     ) -> None:
         """Remove multiple correctly processed messages from the queue."""
+        # FIXME Here, we ignore the success or failure of the request.
         entries = map(generate_delete_message_batch_entry, messages)
         batches = chunked_iter(entries, MAX_NUMBER_OF_MESSAGES)
         for batch in batches:
