@@ -4,7 +4,7 @@ import contexttimer
 import pytest
 
 from platonic.queue import MessageReceiveTimeout
-from platonic.sqs.queue import SQSReceiver
+from platonic.sqs.queue import SQSReceiver, SQSSender
 from platonic.timeout import ConstantTimeout
 from tests.test_queue.robot import Command, ReceiverAndSender
 
@@ -61,3 +61,22 @@ def test_empty_queue_and_iter(str_receiver_with_constant_timeout: SQSReceiver):
 
     assert elapsed_time > 24
     assert elapsed_time < 26
+
+
+def test_send_and_iterate_with_timeout(
+    str_receiver_with_constant_timeout: SQSReceiver,
+    str_sender: SQSSender,
+):
+    str_sender.send('buzinga')
+
+    with contexttimer.Timer() as timer:
+        messages = list(str_receiver_with_constant_timeout)
+        elapsed_time = timer.elapsed
+
+    assert len(messages) == 1
+    assert messages[0].value == 'buzinga'
+
+    assert elapsed_time > 24
+    assert elapsed_time < 26
+
+    str_receiver_with_constant_timeout.acknowledge(messages[0])
