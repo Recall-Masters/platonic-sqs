@@ -1,10 +1,13 @@
 import os
+from datetime import timedelta
 
 import boto3
 import pytest
 from moto.sqs import mock_sqs
 from mypy_boto3_sqs import Client as SQSClient
+from platonic.timeout import ConstantTimeout
 
+from platonic.sqs.queue import SQSReceiver
 from tests.test_queue.robot import (
     CommandReceiver,
     CommandSender,
@@ -26,16 +29,9 @@ def mock_sqs_client():
 
 @pytest.fixture()
 def receiver_and_sender(
-    mock_sqs_client: SQSClient,  # noqa: WPS442
+    sqs_queue_url: str,
 ) -> ReceiverAndSender:
     """Construct two connected SQS queues."""
-    sqs_queue_url = mock_sqs_client.create_queue(
-        QueueName='robot_commands',
-        Attributes={
-            'VisibilityTimeout': '60',
-        },
-    )['QueueUrl']
-
     sender = CommandSender(url=sqs_queue_url)
     receiver = CommandReceiver(url=sqs_queue_url)
 
@@ -50,3 +46,12 @@ def sqs_queue_url(mock_sqs_client: SQSClient) -> str:
             'VisibilityTimeout': '60',
         },
     )['QueueUrl']
+
+
+@pytest.fixture()
+def str_receiver_with_constant_timeout(sqs_queue_url: str) -> SQSReceiver:
+    """Receiver with timeout of 25 seconds."""
+    return SQSReceiver[str](
+        url=sqs_queue_url,
+        timeout=ConstantTimeout(period=timedelta(seconds=25))
+    )

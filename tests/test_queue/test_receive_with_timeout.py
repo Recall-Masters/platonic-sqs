@@ -5,6 +5,8 @@ import pytest
 
 from platonic.queue import MessageReceiveTimeout
 from platonic.timeout import ConstantTimeout
+
+from platonic.sqs.queue import SQSReceiver
 from tests.test_queue.robot import Command, ReceiverAndSender
 
 
@@ -36,3 +38,27 @@ def test_non_empty_queue(receiver_and_sender: ReceiverAndSender):
         elapsed_time = timer.elapsed
 
     assert elapsed_time < 1
+
+
+def test_empty_queue_and_receive(
+    str_receiver_with_constant_timeout: SQSReceiver,
+):
+    """Wait for a while."""
+    with contexttimer.Timer() as timer:
+        with pytest.raises(MessageReceiveTimeout):
+            str_receiver_with_constant_timeout.receive()
+
+        elapsed_time = timer.elapsed
+
+    assert elapsed_time > 24
+    assert elapsed_time < 26
+
+
+def test_empty_queue_and_iter(str_receiver_with_constant_timeout: SQSReceiver):
+    """Iterate over an empty queue."""
+    with contexttimer.Timer() as timer:
+        assert not list(str_receiver_with_constant_timeout)
+        elapsed_time = timer.elapsed
+
+    assert elapsed_time > 24
+    assert elapsed_time < 26

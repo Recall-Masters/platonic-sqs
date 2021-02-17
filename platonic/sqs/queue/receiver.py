@@ -49,7 +49,7 @@ class SQSReceiver(SQSMixin, Receiver[ValueType]):
         """
         Acknowledge that the given message was successfully processed.
 
-        Delete message from the queue.
+        Delete a single message from the queue.
         """
         try:
             self.client.delete_message(
@@ -125,16 +125,16 @@ class SQSReceiver(SQSMixin, Receiver[ValueType]):
         """Within timeout, retrieve the requested number of messages."""
         with self.timeout.timer() as timer:
             while not timer.is_expired:
-                # Calculate the timeout value for SQS Long Polling.
                 try:
                     raw_messages = self._receive_messages(
                         message_count=messages_count,
                         timeout_seconds=self._wait_time_seconds(timer),
                     )['Messages']
                 except KeyError:
-                    # We have not received any messages. Trying again.
+                    # We have not received any messages. Trying again if we can.
                     continue
 
+                # Messages received, returning them.
                 yield from map(
                     self._raw_message_to_sqs_message,
                     raw_messages,
@@ -143,6 +143,8 @@ class SQSReceiver(SQSMixin, Receiver[ValueType]):
 
         raise MessageReceiveTimeout(
             queue=self,
+
+            # FIXME MessageReceiveTimeout class should be updated.
             timeout=0,
         )
 
