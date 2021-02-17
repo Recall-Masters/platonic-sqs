@@ -1,13 +1,16 @@
 from contextlib import contextmanager
 from dataclasses import dataclass, field
-from typing import Iterator, Optional
+from typing import Iterator, Optional, Iterable
 
+from boltons.iterutils import chunked_iter
 from mypy_boto3_sqs.type_defs import (
     MessageTypeDef,
     ReceiveMessageResultTypeDef,
 )
 
 from platonic.queue import MessageReceiveTimeout, Receiver
+
+from platonic.sqs.queue.acknowledge import generate_delete_message_batch_entry
 from platonic.sqs.queue.errors import SQSMessageDoesNotExist
 from platonic.sqs.queue.message import SQSMessage
 from platonic.sqs.queue.sqs import (
@@ -175,3 +178,17 @@ class SQSReceiver(SQSMixin, Receiver[ValueType]):
                 0,
             ),
         ))
+
+    def acknowledge_many(
+        self,
+        messages: Iterable[SQSMessage[ValueType]],
+    ) -> None:
+        """Remove multiple correctly processed messages from the queue."""
+        # FIXME Here, we ignore the success or failure of the request.
+        entries = map(generate_delete_message_batch_entry, messages)
+        batches = chunked_iter(entries, MAX_NUMBER_OF_MESSAGES)
+        for batch in batches:
+            self.client.delete_message_batch(
+                QueueUrl=self.url,
+                Entries=batch,
+            )

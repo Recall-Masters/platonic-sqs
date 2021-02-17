@@ -8,6 +8,7 @@ from typecasts import Typecasts, casts
 from platonic.const import const
 
 # Max number of SQS messages receivable by single API call.
+# Also, max number of SQS messages deletable by single API call.
 MAX_NUMBER_OF_MESSAGES = 10
 
 # Message in its raw form must be shorter than this.
