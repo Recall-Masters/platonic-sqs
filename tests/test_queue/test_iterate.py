@@ -1,25 +1,11 @@
 import operator
+from datetime import timedelta
 from itertools import islice
 
-import contexttimer
-import pytest
 from mypy_boto3_sqs import Client as SQSClient
 
+from platonic.timeout import ConstantTimeout
 from tests.test_queue.robot import Command, CommandReceiver, ReceiverAndSender
-
-
-def test_pause(receiver_and_sender: ReceiverAndSender):
-    """Wait a bit if the queue is empty."""
-    receiver, _sender = receiver_and_sender
-
-    assert receiver.iteration_timeout == 3
-
-    with contexttimer.Timer() as timer:
-        receiver._pause_while_iterating_over_queue()
-
-        elapsed_time = timer.elapsed
-
-    assert round(elapsed_time) <= receiver.iteration_timeout
 
 
 def test_iterate_imperative(receiver_and_sender: ReceiverAndSender):
@@ -63,14 +49,6 @@ def test_iterate_functional(receiver_and_sender: ReceiverAndSender):
     assert received_commands == sent_commands
 
 
-class NotPausingReceiver(CommandReceiver):
-    """Receiver with overridden pause method."""
-
-    def _pause_while_iterating_over_queue(self) -> None:
-        """Do not pause, raise instead."""
-        raise ValueError('foo!')
-
-
 def test_empty_queue(mock_sqs_client: SQSClient):
     """Test empty queue."""
     sqs_queue_url = mock_sqs_client.create_queue(
@@ -80,8 +58,9 @@ def test_empty_queue(mock_sqs_client: SQSClient):
         },
     )['QueueUrl']
 
-    receiver = NotPausingReceiver(url=sqs_queue_url)
+    receiver = CommandReceiver(
+        url=sqs_queue_url,
+        timeout=ConstantTimeout(period=timedelta(seconds=5)),
+    )
 
-    with pytest.raises(ValueError):
-        for sqs_message in receiver:
-            assert sqs_message is not None
+    assert not list(receiver)
