@@ -9,6 +9,10 @@
       <excludeFolder url="file://$MODULE_DIR$/platonic_amazon_sqs.egg-info" />
       <excludeFolder url="file://$MODULE_DIR$/tests/htmlcov" />
       <excludeFolder url="file://$MODULE_DIR$/tests/test_queue/htmlcov" />
+      <excludeFolder url="file://$MODULE_DIR$/tests/test_queue/test_send_and_receive/.hypothesis" />
+      <excludeFolder url="file://$MODULE_DIR$/tests/test_queue/test_send_and_receive/htmlcov" />
+      <excludeFolder url="file://$MODULE_DIR$/tests/test_queue/.hypothesis" />
+      <excludeFolder url="file://$MODULE_DIR$/dist" />
     </content>
     <orderEntry type="jdk" jdkName="Python 3.8 (platonic-sqs)" jdkType="Python SDK" />
     <orderEntry type="sourceFolder" forTests="false" />
