@@ -5,13 +5,12 @@ from typing import Iterable
 from boltons.iterutils import chunked_iter
 from botocore.exceptions import ClientError
 from mypy_boto3_sqs.type_defs import SendMessageBatchRequestEntryTypeDef
-
 from platonic.queue import MessageTooLarge, Sender
+
 from platonic.sqs.queue.errors import SQSQueueDoesNotExist
 from platonic.sqs.queue.message import SQSMessage
 from platonic.sqs.queue.sqs import (
     MAX_MESSAGE_SIZE,
-    MAX_NUMBER_OF_MESSAGES,
     SQSMixin,
 )
 from platonic.sqs.queue.types import ValueType
@@ -51,9 +50,9 @@ class SQSSender(SQSMixin, Sender[ValueType]):
 
     def send_many(self, iterable: Iterable[ValueType]) -> None:  # noqa: WPS231
         """Send multiple messages."""
-        # Per one API call, we can send no more than MAX_NUMBER_OF_MESSAGES
+        # Per one API call, we can send no more than self.batch_size
         # individual messages.
-        batches = chunked_iter(iterable, MAX_NUMBER_OF_MESSAGES)
+        batches = chunked_iter(iterable, self.batch_size)
 
         for batch in batches:
             entries = list(map(

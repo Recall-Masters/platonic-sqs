@@ -7,20 +7,18 @@ from mypy_boto3_sqs.type_defs import (
     MessageTypeDef,
     ReceiveMessageResultTypeDef,
 )
-
 from platonic.queue import MessageReceiveTimeout, Receiver
+from platonic.timeout import InfiniteTimeout
+from platonic.timeout.base import BaseTimeout, BaseTimer
 
 from platonic.sqs.queue.acknowledge import generate_delete_message_batch_entry
 from platonic.sqs.queue.errors import SQSMessageDoesNotExist
 from platonic.sqs.queue.message import SQSMessage
 from platonic.sqs.queue.sqs import (
-    MAX_NUMBER_OF_MESSAGES,
     MAX_WAIT_TIME_SECONDS,
     SQSMixin,
 )
 from platonic.sqs.queue.types import InternalType, ValueType
-from platonic.timeout import InfiniteTimeout
-from platonic.timeout.base import BaseTimeout, BaseTimer
 
 
 @dataclass
@@ -94,7 +92,7 @@ class SQSReceiver(SQSMixin, Receiver[ValueType]):
         while True:
             try:
                 yield from self._fetch_messages_with_timeout(
-                    messages_count=MAX_NUMBER_OF_MESSAGES,
+                    messages_count=self.batch_size,
                 )
             except MessageReceiveTimeout:
                 return
@@ -186,7 +184,7 @@ class SQSReceiver(SQSMixin, Receiver[ValueType]):
         """Remove multiple correctly processed messages from the queue."""
         # FIXME Here, we ignore the success or failure of the request.
         entries = map(generate_delete_message_batch_entry, messages)
-        batches = chunked_iter(entries, MAX_NUMBER_OF_MESSAGES)
+        batches = chunked_iter(entries, self.batch_size)
         for batch in batches:
             self.client.delete_message_batch(
                 QueueUrl=self.url,

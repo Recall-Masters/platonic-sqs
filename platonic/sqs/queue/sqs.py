@@ -26,3 +26,10 @@ class SQSMixin:
     typecasts: Typecasts = field(default_factory=const(casts))
     internal_type: type = field(default=str)
     client: SQSClient = field(default_factory=partial(boto3.client, 'sqs'))
+    batch_size: int = field(default=MAX_NUMBER_OF_MESSAGES, metadata={
+        '__doc__': (
+            f'Max number of SQS messages to process within one API call. '
+            f'Default is {MAX_NUMBER_OF_MESSAGES}. Exceeding the max value '
+            f'will cause validation errors from AWS.'
+        ),
+    })
