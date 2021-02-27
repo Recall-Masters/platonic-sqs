@@ -2,7 +2,7 @@ SHELL:=/usr/bin/env bash
 
 .PHONY: lint
 lint:
-	mypy platonic/sqs tests/**/*.py
+	mypy platonic/sqs tests
 	poetry run flakehell lint platonic tests
 
 .PHONY: unit
