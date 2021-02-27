@@ -8,7 +8,7 @@ name = "platonic-sqs"
 packages = [
   { include = "platonic" },
 ]
-version = "1.2.2"
+version = "1.2.5"
 description = "Platonic wrapper for Amazon Simple Queue Service"
 license = "MIT"
 
@@ -28,16 +28,16 @@ classifiers = [
 ]
 
 [tool.poetry.dependencies]
-python = "^3.8,<3.10"
+python = ">=3.7,<3.10"
 boto3-stubs = {extras = ["sqs"], version = "^1.15.10"}
 boltons = "^20.2.1"
-platonic = "^1.2.0"
+platonic = "^1.2.1"
 attrs = "^20.3.0"
+botocore = "^1.20.15"
+boto3 = "^1.17.15"
 
 [tool.poetry.dev-dependencies]
-mypy = "^0.800"
 
-wemake-python-styleguide = "0.15"
 flake8-pytest = "^1.3"
 flake8-pytest-style = "^0.1.3"
 
@@ -52,8 +52,8 @@ tomlkit = "^0.5"
 boto3 = "^1.12.11"
 moto = "^1.3.14"
 contexttimer = "^0.3.3"
-isort = "<5.0.0"
 sshpubkeys = "^3.1.0"
 ipython = "^7.19.0"
 hypothesis = "^6.2.0"
 flakehell = "^0.9.0"
+mister-jeeves = "^0.0.3"
