@@ -8,7 +8,7 @@ name = "platonic-sqs"
 packages = [
   { include = "platonic" },
 ]
-version = "1.2.5"
+version = "1.2.6"
 description = "Platonic wrapper for Amazon Simple Queue Service"
 license = "MIT"
 
@@ -35,6 +35,8 @@ platonic = "^1.2.1"
 attrs = "^20.3.0"
 botocore = "^1.20.15"
 boto3 = "^1.17.15"
+pipdeptree = "^2.0.0"
+mypy-boto3-sqs = "^1.17.26"
 
 [tool.poetry.dev-dependencies]
 
