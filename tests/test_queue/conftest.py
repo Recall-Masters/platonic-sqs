@@ -54,7 +54,7 @@ def str_receiver_with_constant_timeout(sqs_queue_url: str) -> SQSReceiver:
     """Receiver with timeout of 25 seconds."""
     return SQSReceiver[str](
         url=sqs_queue_url,
-        timeout=ConstantTimeout(period=timedelta(seconds=25))
+        timeout=ConstantTimeout(period=timedelta(seconds=25)),
     )
 
 
