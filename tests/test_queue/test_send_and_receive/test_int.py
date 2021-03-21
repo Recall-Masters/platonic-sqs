@@ -14,19 +14,27 @@ typecasts.casts[int, str] = str
 typecasts.casts[str, int] = int
 
 
+class IntSender(SQSSender[int]):
+    """Integer sender."""
+
+
+class IntReceiver(SQSReceiver[int]):
+    """Integer receiver."""
+
+
 @pytest.mark.parametrize('message_value', [0, 1, 365465477])
 @pytest.mark.parametrize(
     'sender_class',
     [
         SQSSender[int],
-        types.new_class('IntSender', (SQSSender[int], ), {}),
+        IntSender,
     ],
 )
 @pytest.mark.parametrize(
     'receiver_class',
     [
         SQSReceiver[int],
-        types.new_class('IntReceiver', (SQSReceiver[int], ), {}),
+        IntReceiver,
     ],
 )
 @pytest.mark.parametrize(
