@@ -9,6 +9,14 @@ from platonic.timeout.base import BaseTimeout
 from platonic.sqs.queue import SQSReceiver, SQSSender
 
 
+class StrSender(SQSSender[str]):
+    """String sender."""
+
+
+class StrReceiver(SQSReceiver[str]):
+    """String receiver."""
+
+
 @pytest.mark.parametrize('message_value', [
     'foo',
     'boo',
@@ -18,14 +26,14 @@ from platonic.sqs.queue import SQSReceiver, SQSSender
     'sender_class',
     [
         SQSSender[str],
-        types.new_class('StrSender', (SQSSender[str], ), {}),
+        StrSender,
     ],
 )
 @pytest.mark.parametrize(
     'receiver_class',
     [
         SQSReceiver[str],
-        types.new_class('StrReceiver', (SQSReceiver[str], ), {}),
+        StrReceiver,
     ],
 )
 @pytest.mark.parametrize(
