@@ -67,6 +67,9 @@ def test_send_and_iterate_with_timeout(
     str_receiver_with_constant_timeout: SQSReceiver,
     str_sender: SQSSender,
 ):
+    str_sender.client.purge_queue(
+        QueueUrl=str_sender.url,
+    )
     str_sender.send('buzinga')
 
     with contexttimer.Timer() as timer:
