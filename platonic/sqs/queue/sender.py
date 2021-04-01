@@ -83,7 +83,7 @@ class SQSSender(SQSMixin, Sender[ValueType]):
             raise SQSQueueDoesNotExist(queue=self) from does_not_exist
 
         except self.client.exceptions.ClientError as err:
-            if _error_code_is(err, 'BatchRequestTooLong'):
+            if _error_code_is(err, 'BatchRequestTooLong'):   # pragma: no cover
                 raise MessageTooLarge(
                     max_supported_size=MAX_MESSAGE_SIZE,
                     message_body=json.dumps(entries),
