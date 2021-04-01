@@ -3,7 +3,7 @@ SHELL:=/usr/bin/env bash
 .PHONY: lint
 lint:
 	mypy --explicit-package-bases --namespace-packages platonic
-	git diff origin/master | poetry run flakehell lint platonic tests
+	poetry run flakehell lint platonic tests
 
 .PHONY: unit
 unit:
