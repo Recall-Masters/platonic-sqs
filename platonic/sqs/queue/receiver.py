@@ -17,7 +17,7 @@ from platonic.timeout import InfiniteTimeout
 from platonic.timeout.base import BaseTimeout, BaseTimer
 
 
-@dataclass
+@dataclass  # noqa: WPS214
 class SQSReceiver(SQSMixin, Receiver[ValueType]):   # noqa: WPS214
     """Queue to read stuff from."""
 
