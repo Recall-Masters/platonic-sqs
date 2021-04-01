@@ -42,7 +42,7 @@ class SQSSender(SQSMixin, Sender[ValueType]):
 
             raise  # pragma: no cover
 
-        return SQSMessage(
+        return SQSMessage(  # type: ignore
             value=instance,
             # FIXME this probably is not correct. `id` contains MessageId in
             #   one cases and ResponseHandle in others. Inconsistent.

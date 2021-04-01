@@ -164,7 +164,7 @@ class SQSReceiver(SQSMixin, Receiver[ValueType]):   # noqa: WPS214
     ) -> SQSMessage[ValueType]:
         """Convert a raw SQS message to the proper SQSMessage instance."""
         # noinspection PyTypeChecker
-        return SQSMessage(
+        return SQSMessage(  # type: ignore
             value=self.deserialize_value(InternalType(
                 raw_message['Body'],
             )),
