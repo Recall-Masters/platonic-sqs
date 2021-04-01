@@ -1,7 +1,6 @@
 """Children are sending letters to Santa Claus. Sometimes those are too long."""
 import pytest
 from mypy_boto3_sqs import Client as SQSClient
-
 from platonic.queue import MessageTooLarge
 from platonic.sqs.queue import SQSReceiver, SQSSender
 

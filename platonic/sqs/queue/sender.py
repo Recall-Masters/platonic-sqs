@@ -6,13 +6,9 @@ from typing import Iterable, List
 from botocore.exceptions import ClientError
 from mypy_boto3_sqs.type_defs import SendMessageBatchRequestEntryTypeDef
 from platonic.queue import MessageTooLarge, Sender
-
 from platonic.sqs.queue.errors import SQSQueueDoesNotExist
 from platonic.sqs.queue.message import SQSMessage
-from platonic.sqs.queue.sqs import (
-    MAX_MESSAGE_SIZE,
-    SQSMixin,
-)
+from platonic.sqs.queue.sqs import MAX_MESSAGE_SIZE, SQSMixin
 from platonic.sqs.queue.types import ValueType
 
 

@@ -1,6 +1,5 @@
 import pytest
 from botocore.exceptions import ClientError
-
 from platonic.sqs.queue import SQSReceiver
 
 

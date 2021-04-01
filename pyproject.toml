@@ -58,3 +58,6 @@ ipython = "^7.19.0"
 hypothesis = "^6.2.0"
 flakehell = "^0.9.0"
 mister-jeeves = "^0.0.3"
+
+[tool.flakehell]
+base = "https://raw.githubusercontent.com/Recall-Masters/standards/main/pyproject.toml"

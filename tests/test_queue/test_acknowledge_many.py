@@ -1,7 +1,6 @@
 import string
 
 import contexttimer
-
 from platonic.sqs.queue import SQSReceiver, SQSSender
 
 

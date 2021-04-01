@@ -1,6 +1,6 @@
 from contextlib import contextmanager
 from dataclasses import dataclass, field
-from typing import Iterator, Optional, Iterable
+from typing import Iterable, Iterator, Optional
 
 from boltons.iterutils import chunked_iter
 from mypy_boto3_sqs.type_defs import (
@@ -8,17 +8,13 @@ from mypy_boto3_sqs.type_defs import (
     ReceiveMessageResultTypeDef,
 )
 from platonic.queue import MessageReceiveTimeout, Receiver
-from platonic.timeout import InfiniteTimeout
-from platonic.timeout.base import BaseTimeout, BaseTimer
-
 from platonic.sqs.queue.acknowledge import generate_delete_message_batch_entry
 from platonic.sqs.queue.errors import SQSMessageDoesNotExist
 from platonic.sqs.queue.message import SQSMessage
-from platonic.sqs.queue.sqs import (
-    MAX_WAIT_TIME_SECONDS,
-    SQSMixin,
-)
+from platonic.sqs.queue.sqs import MAX_WAIT_TIME_SECONDS, SQSMixin
 from platonic.sqs.queue.types import InternalType, ValueType
+from platonic.timeout import InfiniteTimeout
+from platonic.timeout.base import BaseTimeout, BaseTimer
 
 
 @dataclass

@@ -5,7 +5,6 @@ import boto3
 import pytest
 from moto.sqs import mock_sqs
 from mypy_boto3_sqs import Client as SQSClient
-
 from platonic.sqs.queue import SQSReceiver, SQSSender
 from platonic.timeout import ConstantTimeout
 from tests.test_queue.robot import (

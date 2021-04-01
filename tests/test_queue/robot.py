@@ -5,7 +5,6 @@ from enum import Enum
 from typing import Tuple
 
 import typecasts
-
 from platonic.sqs.queue import SQSReceiver, SQSSender
 
 
