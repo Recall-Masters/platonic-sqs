@@ -120,7 +120,14 @@ class SQSSender(SQSMixin, Sender[ValueType]):
         if new_batch_size > MAX_MESSAGE_SIZE:
             # We cannot add new entry to the existing batch because it will be
             # too large. Let's send it out.
-            self._send_message_batch(existing_entries)
+            if existing_entries:
+                self._send_message_batch(existing_entries)
+            else:
+                raise MessageTooLarge(
+                    max_supported_size=MAX_MESSAGE_SIZE,
+                    message_body=new_entry['MessageBody'],
+                )
+
             return [new_entry]
 
         new_batch_count = len(existing_entries) + 1
