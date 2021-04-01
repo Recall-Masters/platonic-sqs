@@ -1,8 +1,8 @@
+import functools
 import json
 import uuid
-from typing import Iterable
+from typing import Iterable, List
 
-from boltons.iterutils import chunked_iter
 from botocore.exceptions import ClientError
 from mypy_boto3_sqs.type_defs import SendMessageBatchRequestEntryTypeDef
 from platonic.queue import MessageTooLarge, Sender
@@ -48,35 +48,90 @@ class SQSSender(SQSMixin, Sender[ValueType]):
             receipt_handle=sqs_response['MessageId'],
         )
 
-    def send_many(self, iterable: Iterable[ValueType]) -> None:  # noqa: WPS231
-        """Send multiple messages."""
-        # Per one API call, we can send no more than self.batch_size
-        # individual messages.
-        batches = chunked_iter(iterable, self.batch_size)
+    def _send_message_batch(
+        self,
+        entries: List[SendMessageBatchRequestEntryTypeDef],
+    ):
+        try:
+            self.client.send_message_batch(
+                QueueUrl=self.url,
+                Entries=entries,
+            )
 
-        for batch in batches:
-            entries = list(map(
-                self._generate_send_batch_entry,
-                batch,
-            ))
+        except self.client.exceptions.QueueDoesNotExist as does_not_exist:
+            raise SQSQueueDoesNotExist(queue=self) from does_not_exist
 
-            try:
-                self.client.send_message_batch(
-                    QueueUrl=self.url,
-                    Entries=entries,
+        except self.client.exceptions.ClientError as err:
+            if self._error_code_is(err, 'BatchRequestTooLong'):
+                raise MessageTooLarge(
+                    max_supported_size=MAX_MESSAGE_SIZE,
+                    message_body=json.dumps(entries),
                 )
 
-            except self.client.exceptions.QueueDoesNotExist as does_not_exist:
-                raise SQSQueueDoesNotExist(queue=self) from does_not_exist
+            raise
 
-            except self.client.exceptions.ClientError as err:
-                if self._error_code_is(err, 'BatchRequestTooLong'):
-                    raise MessageTooLarge(
-                        max_supported_size=MAX_MESSAGE_SIZE,
-                        message_body=json.dumps(entries),
-                    )
+    def _accumulate_batch_for_sending(
+        self,
+        existing_entries: List[SendMessageBatchRequestEntryTypeDef],
+        new_entry: SendMessageBatchRequestEntryTypeDef,
+    ) -> List[SendMessageBatchRequestEntryTypeDef]:
+        """
+        Analyse a batch of entries plus a new one.
 
-                raise
+        If the new entry can be appended to the batch, and it still will be
+        eligible for sending out to the queue, do that.
+
+        Otherwise, send the batch while we can, and start a new one which will
+        only contain the new_entry in it.
+
+        Precondition: existing_entries is a batch that is eligible to be
+        sent out, because we verified that on a previous iteration.
+
+        Postcondition: the list returned by this function is
+            - not empty,
+            - eligible to be sent out.
+        """
+        new_batch_size = sum(
+            len(entry['MessageBody'])
+            for entry in existing_entries + [new_entry]
+        )
+
+        if new_batch_size > MAX_MESSAGE_SIZE:
+            # We cannot add new entry to the existing batch because it will be
+            # too large. Let's send it out.
+            self._send_message_batch(existing_entries)
+            return [new_entry]
+
+        new_batch_count = len(existing_entries) + 1
+        if new_batch_count > self.batch_size:
+            # We cannot add a new entry to this batch because its entry count
+            # is already at the max limit. Sending it out.
+            self._send_message_batch(existing_entries)
+            return [new_entry]
+
+        # No problems found. Adding new entry to the batch! Perhaps we will send
+        # it on next iteration.
+        return existing_entries + [new_entry]
+
+    def send_many(self, iterable: Iterable[ValueType]) -> None:
+        """Send multiple messages."""
+        send_batch_entries = map(
+            self._generate_send_batch_entry,
+            iterable,
+        )
+
+        trailing_entries = functools.reduce(
+            self._accumulate_batch_for_sending,
+            send_batch_entries,
+            [],
+        )
+
+        # The last batch returned from reduce() is sendable (see postcondition
+        # for `_accumulate_batch_for_sending()` function), and it was not sent
+        # by _accumulate_batch_for_sending() itself. We are at the end of the
+        # entries sequence, we have to send it out.
+        if trailing_entries:
+            self._send_message_batch(trailing_entries)
 
     def _generate_batch_entry_id(self) -> str:
         """Generate batch entry id."""
