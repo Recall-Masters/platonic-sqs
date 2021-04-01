@@ -1,6 +1,6 @@
-import functools
 import json
 import uuid
+from functools import reduce
 from typing import Iterable, List
 
 from botocore.exceptions import ClientError
@@ -56,7 +56,7 @@ class SQSSender(SQSMixin, Sender[ValueType]):
             iterable,
         )
 
-        trailing_entries = functools.reduce(
+        trailing_entries: List[SendMessageBatchRequestEntryTypeDef] = reduce(
             self._accumulate_batch_for_sending,
             send_batch_entries,
             [],
