@@ -40,4 +40,4 @@ def test_send_many_large_letters(mock_sqs_client: SQSClient):
     sender = LetterSender(url=sqs_queue_url)
 
     with pytest.raises(MessageTooLarge):
-        sender.send_many([letter] * 5)
+        sender.send_many([letter] * 5)  # noqa: WPS435

@@ -9,6 +9,8 @@ from tests.test_queue.robot import Command, CommandSender, ReceiverAndSender
 
 
 class CustomBatchIdSender(CommandSender):
+    """Send SQS messages with a constant id."""
+
     def _generate_batch_entry_id(self) -> str:
         """Generate a custom, and constant, id."""
         return 'foo'
