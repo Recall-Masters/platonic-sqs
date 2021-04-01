@@ -12,6 +12,11 @@ from platonic.sqs.queue.sqs import MAX_MESSAGE_SIZE, SQSMixin
 from platonic.sqs.queue.types import ValueType
 
 
+def _error_code_is(error: ClientError, error_code: str) -> bool:
+    """Check error code of a boto3 ClientError."""
+    return error.response['Error']['Code'] == error_code
+
+
 class SQSSender(SQSMixin, Sender[ValueType]):
     """Queue to write stuff into."""
 
@@ -29,7 +34,7 @@ class SQSSender(SQSMixin, Sender[ValueType]):
             raise SQSQueueDoesNotExist(queue=self) from queue_does_not_exist
 
         except self.client.exceptions.ClientError as err:
-            if self._error_code_is(err, 'InvalidParameterValue'):
+            if _error_code_is(err, 'InvalidParameterValue'):
                 raise MessageTooLarge(
                     max_supported_size=MAX_MESSAGE_SIZE,
                     message_body=message_body,
@@ -43,6 +48,26 @@ class SQSSender(SQSMixin, Sender[ValueType]):
             #   one cases and ResponseHandle in others. Inconsistent.
             receipt_handle=sqs_response['MessageId'],
         )
+
+    def send_many(self, iterable: Iterable[ValueType]) -> None:
+        """Send multiple messages."""
+        send_batch_entries = map(
+            self._generate_send_batch_entry,
+            iterable,
+        )
+
+        trailing_entries = functools.reduce(
+            self._accumulate_batch_for_sending,
+            send_batch_entries,
+            [],
+        )
+
+        # The last batch returned from reduce() is sendable (see postcondition
+        # for `_accumulate_batch_for_sending()` function), and it was not sent
+        # by _accumulate_batch_for_sending() itself. We are at the end of the
+        # entries sequence, we have to send it out.
+        if trailing_entries:
+            self._send_message_batch(trailing_entries)
 
     def _send_message_batch(
         self,
@@ -58,7 +83,7 @@ class SQSSender(SQSMixin, Sender[ValueType]):
             raise SQSQueueDoesNotExist(queue=self) from does_not_exist
 
         except self.client.exceptions.ClientError as err:
-            if self._error_code_is(err, 'BatchRequestTooLong'):
+            if _error_code_is(err, 'BatchRequestTooLong'):
                 raise MessageTooLarge(
                     max_supported_size=MAX_MESSAGE_SIZE,
                     message_body=json.dumps(entries),
@@ -109,26 +134,6 @@ class SQSSender(SQSMixin, Sender[ValueType]):
         # it on next iteration.
         return existing_entries + [new_entry]
 
-    def send_many(self, iterable: Iterable[ValueType]) -> None:
-        """Send multiple messages."""
-        send_batch_entries = map(
-            self._generate_send_batch_entry,
-            iterable,
-        )
-
-        trailing_entries = functools.reduce(
-            self._accumulate_batch_for_sending,
-            send_batch_entries,
-            [],
-        )
-
-        # The last batch returned from reduce() is sendable (see postcondition
-        # for `_accumulate_batch_for_sending()` function), and it was not sent
-        # by _accumulate_batch_for_sending() itself. We are at the end of the
-        # entries sequence, we have to send it out.
-        if trailing_entries:
-            self._send_message_batch(trailing_entries)
-
     def _generate_batch_entry_id(self) -> str:
         """Generate batch entry id."""
         return uuid.uuid4().hex
@@ -142,7 +147,3 @@ class SQSSender(SQSMixin, Sender[ValueType]):
             Id=self._generate_batch_entry_id(),
             MessageBody=self.serialize_value(instance),
         )
-
-    def _error_code_is(self, error: ClientError, error_code: str) -> bool:
-        """Check error code of a boto3 ClientError."""
-        return error.response['Error']['Code'] == error_code

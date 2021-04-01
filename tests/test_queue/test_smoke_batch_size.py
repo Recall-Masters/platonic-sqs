@@ -17,4 +17,4 @@ def test_smoke_batch_size(sqs_queue_url: str):
         'when calling the ReceiveMessage operation: Value 100 for '
         'parameter MaxNumberOfMessages is invalid. Reason: must be between '
         '1 and 10, if provided.'
-    ) in str(err.value)
+    ) in str(err.value)  # noqa: WPS441

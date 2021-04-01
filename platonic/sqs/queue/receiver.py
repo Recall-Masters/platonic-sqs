@@ -18,7 +18,7 @@ from platonic.timeout.base import BaseTimeout, BaseTimer
 
 
 @dataclass
-class SQSReceiver(SQSMixin, Receiver[ValueType]):
+class SQSReceiver(SQSMixin, Receiver[ValueType]):   # noqa: WPS214
     """Queue to read stuff from."""
 
     timeout: BaseTimeout = field(default_factory=InfiniteTimeout)
@@ -77,6 +77,20 @@ class SQSReceiver(SQSMixin, Receiver[ValueType]):
 
         finally:
             self.acknowledge(message)
+
+    def acknowledge_many(
+        self,
+        messages: Iterable[SQSMessage[ValueType]],
+    ) -> None:
+        """Remove multiple correctly processed messages from the queue."""
+        # FIXME Here, we ignore the success or failure of the request.
+        entries = map(generate_delete_message_batch_entry, messages)
+        batches = chunked_iter(entries, self.batch_size)
+        for batch in batches:
+            self.client.delete_message_batch(
+                QueueUrl=self.url,
+                Entries=batch,
+            )
 
     def __iter__(self) -> Iterator[SQSMessage[ValueType]]:
         """
@@ -172,17 +186,3 @@ class SQSReceiver(SQSMixin, Receiver[ValueType]):
                 0,
             ),
         ))
-
-    def acknowledge_many(
-        self,
-        messages: Iterable[SQSMessage[ValueType]],
-    ) -> None:
-        """Remove multiple correctly processed messages from the queue."""
-        # FIXME Here, we ignore the success or failure of the request.
-        entries = map(generate_delete_message_batch_entry, messages)
-        batches = chunked_iter(entries, self.batch_size)
-        for batch in batches:
-            self.client.delete_message_batch(
-                QueueUrl=self.url,
-                Entries=batch,
-            )

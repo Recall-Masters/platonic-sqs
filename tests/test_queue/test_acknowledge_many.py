@@ -23,7 +23,7 @@ def test_send_and_acknowledge_many(  # noqa: WPS210
 
     str_receiver_with_constant_timeout.acknowledge_many(messages)
 
-    with contexttimer.Timer() as timer:
+    with contexttimer.Timer() as timer:   # noqa: WPS440
         empty_messages = list(str_receiver_with_constant_timeout)
         empty_elapsed_time = timer.elapsed
 
