@@ -2,7 +2,6 @@ from datetime import timedelta
 
 import contexttimer
 import pytest
-
 from platonic.queue import MessageReceiveTimeout
 from platonic.sqs.queue import SQSReceiver, SQSSender
 from platonic.timeout import ConstantTimeout

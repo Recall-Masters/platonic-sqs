@@ -1,7 +1,6 @@
 import contexttimer
 import pytest
 from mypy_boto3_sqs import Client as SQSClient
-
 from platonic.queue import QueueDoesNotExist
 from tests.test_queue.robot import Command, CommandSender, ReceiverAndSender
 

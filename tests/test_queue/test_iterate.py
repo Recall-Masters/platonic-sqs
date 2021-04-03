@@ -3,7 +3,6 @@ from datetime import timedelta
 from itertools import islice
 
 from mypy_boto3_sqs import Client as SQSClient
-
 from platonic.timeout import ConstantTimeout
 from tests.test_queue.robot import Command, CommandReceiver, ReceiverAndSender
 

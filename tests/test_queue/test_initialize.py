@@ -1,6 +1,5 @@
-from typecasts import Typecasts
-
 from platonic.sqs.queue import SQSSender
+from typecasts import Typecasts
 
 OWN_TYPECASTS = Typecasts()
 

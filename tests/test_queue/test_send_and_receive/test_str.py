@@ -1,12 +1,10 @@
-import types
 from datetime import timedelta
 from typing import Type
 
 import pytest
+from platonic.sqs.queue import SQSReceiver, SQSSender
 from platonic.timeout import ConstantTimeout, InfiniteTimeout
 from platonic.timeout.base import BaseTimeout
-
-from platonic.sqs.queue import SQSReceiver, SQSSender
 
 
 class StrSender(SQSSender[str]):

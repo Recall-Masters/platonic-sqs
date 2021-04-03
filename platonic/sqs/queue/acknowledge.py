@@ -1,7 +1,6 @@
 import uuid
 
 from mypy_boto3_sqs.type_defs import DeleteMessageBatchRequestEntryTypeDef
-
 from platonic.sqs.queue.message import SQSMessage
 from platonic.sqs.queue.types import ValueType
 

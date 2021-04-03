@@ -5,7 +5,6 @@ import boto3
 import pytest
 from moto.sqs import mock_sqs
 from mypy_boto3_sqs import Client as SQSClient
-
 from platonic.sqs.queue import SQSReceiver, SQSSender
 from platonic.timeout import ConstantTimeout
 from tests.test_queue.robot import (
@@ -19,9 +18,9 @@ from tests.test_queue.robot import (
 def mock_sqs_client():
     """Mocked AWS Credentials for moto."""
     os.environ['AWS_ACCESS_KEY_ID'] = 'testing'
-    os.environ['AWS_SECRET_ACCESS_KEY'] = 'testing'
-    os.environ['AWS_SECURITY_TOKEN'] = 'testing'
-    os.environ['AWS_SESSION_TOKEN'] = 'testing'
+    os.environ['AWS_SECRET_ACCESS_KEY'] = 'testing'  # noqa: S105
+    os.environ['AWS_SECURITY_TOKEN'] = 'testing'     # noqa: S105
+    os.environ['AWS_SESSION_TOKEN'] = 'testing'      # noqa: S105
     os.environ['AWS_DEFAULT_REGION'] = 'us-east-1'
 
     with mock_sqs():

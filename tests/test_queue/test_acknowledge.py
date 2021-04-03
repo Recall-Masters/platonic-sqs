@@ -1,7 +1,6 @@
 from datetime import timedelta
 
 import pytest
-
 from platonic.queue import MessageDoesNotExist, MessageReceiveTimeout
 from platonic.sqs.queue import SQSMessage
 from platonic.timeout import ConstantTimeout

@@ -5,11 +5,10 @@ from enum import Enum
 from typing import Tuple
 
 import typecasts
-
 from platonic.sqs.queue import SQSReceiver, SQSSender
 
 
-class Command(str, Enum):
+class Command(str, Enum):  # noqa: WPS600
     """Commands for a robot."""
 
     FORWARD = 'forward'

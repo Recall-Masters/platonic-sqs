@@ -3,13 +3,14 @@ from datetime import timedelta
 import pytest
 from botocore.exceptions import ClientError
 from mypy_boto3_sqs import Client as SQSClient
-
 from platonic.queue import MessageReceiveTimeout, QueueDoesNotExist
 from platonic.timeout import ConstantTimeout
 from tests.test_queue.robot import Command, CommandSender, ReceiverAndSender
 
 
 class CustomBatchIdSender(CommandSender):
+    """Send SQS messages with a constant id."""
+
     def _generate_batch_entry_id(self) -> str:
         """Generate a custom, and constant, id."""
         return 'foo'

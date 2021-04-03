@@ -3,9 +3,8 @@ from functools import partial
 
 import boto3
 from mypy_boto3_sqs import Client as SQSClient
-from typecasts import Typecasts, casts
-
 from platonic.const import const
+from typecasts import Typecasts, casts
 
 # Max number of SQS messages receivable by single API call.
 # Also, max number of SQS messages deletable by single API call.
