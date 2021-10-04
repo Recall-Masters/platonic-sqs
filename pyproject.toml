@@ -62,7 +62,8 @@ mister-jeeves = "^0.0.3"
 
 [tool.flakehell]
 base = "https://raw.githubusercontent.com/Recall-Masters/standards/main/pyproject.toml"
-
+# https://github.com/flakehell/flakehell/issues/10
+extended_default_ignore=[]
 
 [tool.flakehell.exceptions."platonic/sqs/queue/receiver.py"]
 wemake-python-styleguide = [
