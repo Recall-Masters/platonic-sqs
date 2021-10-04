@@ -3,7 +3,7 @@ import uuid
 from functools import reduce
 from typing import Iterable, List
 
-from botocore.exceptions import ClientError
+from mypy_boto3_sqs.client import BotocoreClientError
 from mypy_boto3_sqs.type_defs import SendMessageBatchRequestEntryTypeDef
 from platonic.queue import MessageTooLarge, Sender
 from platonic.sqs.queue.errors import SQSQueueDoesNotExist
@@ -12,7 +12,7 @@ from platonic.sqs.queue.sqs import MAX_MESSAGE_SIZE, SQSMixin
 from platonic.sqs.queue.types import ValueType
 
 
-def _error_code_is(error: ClientError, error_code: str) -> bool:
+def _error_code_is(error: BotocoreClientError, error_code: str) -> bool:
     """Check error code of a boto3 ClientError."""
     return error.response['Error']['Code'] == error_code
 
